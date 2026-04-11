@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mariadb:latest
+    container_name: inventory_db
+    environment:
+      # Esta variable crea la base de datos automáticamente
+      MARIADB_DATABASE: inventory_db
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: unpa_user
+      MARIADB_PASSWORD: unpa_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: inventory_backend
+    ports:
+      - "8080:8080"
+    environment:
+      # IMPORTANTE: Dentro de la red de Docker, el host no es localhost, es el nombre del servicio ("db")
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/inventory_db
+      SPRING_DATASOURCE_USERNAME: unpa_user
+      SPRING_DATASOURCE_PASSWORD: unpa_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate # Liquibase hace el esquema, Hibernate solo valida
+    depends_on:
+      - db
+
+volumes:
+  mariadb_data:
