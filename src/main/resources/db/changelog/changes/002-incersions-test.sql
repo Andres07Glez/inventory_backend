@@ -1,5 +1,6 @@
--- Asegúrate de estar en la base de datos correcta
-USE inventory_db;
+--liquibase formatted sql
+--changeset equipo:002-incersions-test.sql
+--comment: Registros para desarrollo
 
 -- 1. USUARIOS (Password: 'password123' - Hash genérico para pruebas)
 INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
