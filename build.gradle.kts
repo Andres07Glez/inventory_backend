@@ -21,7 +21,13 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation ("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    //--- PEGA AQUÍ LAS DE MAPSTRUCT ---
+    implementation("org.mapstruct:mapstruct:1.6.0")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.0")
+    // Este permite que MapStruct vea los Getters/Setters de Lombok:
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
     testImplementation("org.springframework.boot:spring-boot-starter-liquibase-test")
     implementation("org.yaml:snakeyaml")
     compileOnly("org.projectlombok:lombok")
