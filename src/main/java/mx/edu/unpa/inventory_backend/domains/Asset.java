@@ -1,30 +1,29 @@
 package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
-// jdk.jfr.Category;
-//import liquibase.license.User;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-
-import mx.edu.unpa.inventory_backend.domains.Category;
-import mx.edu.unpa.inventory_backend.domains.User;
-import mx.edu.unpa.inventory_backend.domains.Location;
+import lombok.ToString;
+import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
+import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "assets")
 @Getter
 @Setter
-@Table(name = "assets")
+@NoArgsConstructor
+@ToString(exclude = {"category", "location"})
 public class Asset {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "inventory_number", nullable = false, unique = true, length = 30)
+    @Column(nullable = false, unique = true, length = 30)
     private String inventoryNumber;
 
     @Column(unique = true, length = 100)
@@ -39,24 +38,21 @@ public class Asset {
     @Column(length = 150)
     private String model;
 
-    @Column(name = "serial_number", length = 200)
+    @Column(length = 200)
     private String serialNumber;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    // Relaciones con Catálogos
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Relaciones — EAGER solo en category porque siempre se necesita en la respuesta.
+    // Location va LAZY: no siempre se necesita y tiene 3 campos extra.
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
-    private Category category ;
+    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
     private Location location;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id")
-    private Invoice invoice;
 
     @Column(name = "invoice_date")
     private LocalDate invoiceDate;
@@ -64,42 +60,41 @@ public class Asset {
     @Column(name = "entry_date", nullable = false)
     private LocalDate entryDate;
 
-    // Enums basados en tu SQL
+    // Dos estados independientes — ver documentación del schema
     @Enumerated(EnumType.STRING)
-    @Column(name = "condition_status", nullable = false)
+    @Column(nullable = false, length = 20)
     private ConditionStatus conditionStatus = ConditionStatus.GOOD;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "lifecycle_status", nullable = false)
+    @Column(nullable = false, length = 20)
     private LifecycleStatus lifecycleStatus = LifecycleStatus.REGISTERED;
 
-    // Auditoría
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by", nullable = false)
-    private User updatedBy;
-
-    // Relación con las imágenes (Uno a muchos)
-    @OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AssetImage> images;
-
     @PrePersist
-    protected void onCreate() {
+    private void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    private void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Asset a)) return false;
+        return id != null && id.equals(a.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

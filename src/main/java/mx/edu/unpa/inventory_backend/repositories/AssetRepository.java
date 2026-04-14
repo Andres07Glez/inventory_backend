@@ -2,45 +2,32 @@ package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.Optional;
 
-@Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-    /**
-     * Busca un bien por su número de inventario único (ej. INV-2026-00001).
-     * Útil para validaciones antes de registrar uno nuevo.
-     */
-    Optional<Asset> findByInventoryNumber(String inventoryNumber);
+
+    @Query("""
+            SELECT a FROM Asset a
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.location
+            WHERE a.barcode = :barcode
+              AND a.barcode IS NOT NULL
+            """)
+    Optional<Asset> findByBarcodeWithDetails(@Param("barcode") String barcode);
 
     /**
-     * Busca un bien por su código de barras.
-     * Útil para la implementación de escaneo con dispositivos móviles.
+     * Busca por número de inventario institucional.
+     * inventory_number siempre tiene valor (NOT NULL en DB), no necesita el guard extra.
      */
-    Optional<Asset> findByBarcode(String barcode);
-
-    /**
-     * Busca bienes por su número de serie.
-     * Útil para rastrear equipos de cómputo específicos.
-     */
-    List<Asset> findBySerialNumber(String serialNumber);
-
-    /**
-     * Lista todos los bienes que tienen un estado de ciclo de vida específico.
-     * Ejemplo: buscar todos los activos que están 'ASSIGNED'.
-     */
-    List<Asset> findByLifecycleStatus(String lifecycleStatus);
-
-    /**
-     * Busca bienes registrados por un usuario específico.
-     * Útil para auditoría de movimientos.
-     */
-    List<Asset> findByCreatedById(Long userId);
-
-    /**
-     * Verifica si ya existe un número de inventario para evitar duplicados.
-     */
-    boolean existsByInventoryNumber(String inventoryNumber);
+    @Query("""
+            SELECT a FROM Asset a
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.location
+            WHERE a.inventoryNumber = :inventoryNumber
+            """)
+    Optional<Asset> findByInventoryNumberWithDetails(@Param("inventoryNumber") String inventoryNumber);
 }

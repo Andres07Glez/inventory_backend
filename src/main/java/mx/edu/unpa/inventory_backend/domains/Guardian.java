@@ -2,23 +2,24 @@ package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "guardians")
 @Getter
 @Setter
+@NoArgsConstructor
 public class Guardian {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "employee_number", unique = true, length = 30)
-    private String employeeNumber; // Número de empleado institucional
+    @Column(unique = true, length = 30)
+    private String employeeNumber;
 
-    @Column(name = "full_name", nullable = false, length = 150)
+    @Column(nullable = false, length = 150)
     private String fullName;
 
     @Column(length = 150)
@@ -28,29 +29,20 @@ public class Guardian {
     private String phone;
 
     @Column(length = 150)
-    private String department; // Área o departamento
+    private String department;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        if (this.isActive == null) {
-            this.isActive = true;
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Guardian g)) return false;
+        return id != null && id.equals(g.id);
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
-
 }

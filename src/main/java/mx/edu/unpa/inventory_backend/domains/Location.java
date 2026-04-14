@@ -1,18 +1,15 @@
 package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
-import jdk.jfr.Category;
-import liquibase.license.User;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "locations")
 @Getter
 @Setter
+@NoArgsConstructor
 public class Location {
 
     @Id
@@ -20,29 +17,30 @@ public class Location {
     private Integer id;
 
     @Column(nullable = false, length = 150)
-    private String name; // Nombre del área o aula
+    private String name;
 
     @Column(length = 100)
-    private String building; // Edificio o bloque
+    private String building;
 
     @Column(length = 100)
-    private String campus; // Campus (ej. Loma Bonita)
+    private String campus;
 
     @Column(length = 255)
     private String description;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        if (this.isActive == null) {
-            this.isActive = true;
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Location l)) return false;
+        return id != null && id.equals(l.id);
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
+

@@ -2,16 +2,16 @@ package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.ToString;
 
 @Entity
 @Table(name = "categories")
 @Getter
 @Setter
+@NoArgsConstructor
+@ToString(exclude = "parent")
 public class Category {
 
     @Id
@@ -24,27 +24,23 @@ public class Category {
     @Column(length = 255)
     private String description;
 
-    // Relación autorreferencial: Una categoría puede tener un padre
+    // Self-referencing: subcategoría → categoría padre
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    // Relación inversa: Una categoría puede tener muchas subcategorías
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<Category> subCategories;
-
-    @Column(name = "is_active", nullable = false)
+    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        if (this.isActive == null) {
-            this.isActive = true;
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Category c)) return false;
+        return id != null && id.equals(c.id);
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

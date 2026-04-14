@@ -1,30 +1,40 @@
 package mx.edu.unpa.inventory_backend.mappers;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
-import mx.edu.unpa.inventory_backend.DTOs.Asset.Request.AssetRequestDTO;
-import mx.edu.unpa.inventory_backend.DTOs.Asset.Response.AssetResponseDTO;
+import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
+import mx.edu.unpa.inventory_backend.domains.Guardian;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
+import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AssetMapper {
 
-    // Convierte el Domain a un ResponseDTO para enviarlo al cliente
-    @Mapping(source = "category.name", target = "categoryName")
-    @Mapping(source = "location.name", target = "locationName")
-    @Mapping(source = "location.campus", target = "campus")
-    @Mapping(source = "invoice.invoiceNumber", target = "invoiceNumber")
-    @Mapping(source = "createdBy.fullName", target = "createdByName")
-    AssetResponseDTO toResponseDto(Asset asset);
 
-    // Convierte el RequestDTO a Domain para guardarlo (ignora los objetos complejos por ahora)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "category", ignore = true)
-    @Mapping(target = "location", ignore = true)
-    @Mapping(target = "invoice", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    Asset toEntity(AssetRequestDTO requestDto);
+    @Mapping(target = "id",           source = "asset.id")
+    @Mapping(target = "categoryName", source = "asset.category.name")
+    @Mapping(target = "locationName", source = "asset.location.name")
+    @Mapping(target = "building",     source = "asset.location.building")
+    @Mapping(target = "campus",       source = "asset.location.campus")
+    @Mapping(target = "guardian",     source = "activeAssignment", qualifiedByName = "assignmentToGuardianSummary")
+    AssetDetailResponse toDetailResponse(Asset asset, AssetAssignment activeAssignment);
 
+
+    @Named("assignmentToGuardianSummary")
+    default GuardianSummary assignmentToGuardianSummary(AssetAssignment assignment) {
+        if (assignment == null) return null;
+
+        Guardian guardian = assignment.getGuardian();
+        if (guardian == null) return null;
+
+        return new GuardianSummary(
+                guardian.getId(),
+                guardian.getFullName(),
+                guardian.getEmployeeNumber(),
+                guardian.getDepartment()
+        );
+    }
 }
