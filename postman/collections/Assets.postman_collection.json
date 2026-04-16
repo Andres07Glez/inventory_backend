@@ -1,0 +1,19 @@
+{
+  "info": {
+    "_postman_id": "1fd42752-77b7-4d17-9f74-61e677052e2d",
+    "name": "Assets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "42993958",
+    "_collection_link": "https://go.postman.co/collection/42993958-1fd42752-77b7-4d17-9f74-61e677052e2d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ]
+}
