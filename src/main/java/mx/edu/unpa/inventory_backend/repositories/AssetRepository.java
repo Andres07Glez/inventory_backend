@@ -9,6 +9,9 @@ import java.util.Optional;
 
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
+    boolean existsByBarcodeAndBarcodeIsNotNull(String barcode);
+
+    boolean existsBySerialNumber(String serialNumber);
 
     @Query("""
             SELECT a FROM Asset a

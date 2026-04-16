@@ -1,7 +1,6 @@
 package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
-import liquibase.license.User;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;

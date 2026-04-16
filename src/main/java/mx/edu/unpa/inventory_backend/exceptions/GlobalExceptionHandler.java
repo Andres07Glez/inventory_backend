@@ -72,6 +72,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(message));
     }
 
+    /** 409 — Recurso duplicado: barcode o serial_number ya registrado */
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException ex) {
+        log.warn("Recurso duplicado: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     /** 500 — Error inesperado. Log completo en servidor, mensaje genérico al cliente. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericError(Exception ex) {

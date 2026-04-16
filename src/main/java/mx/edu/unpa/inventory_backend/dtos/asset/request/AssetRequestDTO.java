@@ -1,4 +1,4 @@
-package mx.edu.unpa.inventory_backend.DTOs.Asset.Request;
+package mx.edu.unpa.inventory_backend.dtos.asset.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

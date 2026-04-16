@@ -1,4 +1,4 @@
-package mx.edu.unpa.inventory_backend.DTOs.Asset.Response;
+package mx.edu.unpa.inventory_backend.dtos.asset.response;
 
 import lombok.Data;
 import java.time.LocalDate;
