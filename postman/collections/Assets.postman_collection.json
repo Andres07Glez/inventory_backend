@@ -1,0 +1,36 @@
+{
+  "info": {
+    "_postman_id": "1fd42752-77b7-4d17-9f74-61e677052e2d",
+    "name": "Assets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "42993958",
+    "_collection_link": "https://go.postman.co/collection/42993958-1fd42752-77b7-4d17-9f74-61e677052e2d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "assets/lookup",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/assets/lookup?q=INV-2026-001",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "assets",
+            "lookup"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "INV-2026-001"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
