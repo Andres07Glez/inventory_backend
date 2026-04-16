@@ -8,10 +8,27 @@
   },
   "item": [
     {
-      "name": "New Request",
+      "name": "assets/lookup",
       "request": {
         "method": "GET",
-        "header": []
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/assets/lookup?q=INV-2026-001",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "assets",
+            "lookup"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "INV-2026-001"
+            }
+          ]
+        }
       },
       "response": []
     }
