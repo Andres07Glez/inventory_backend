@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "1fd42752-77b7-4d17-9f74-61e677052e2d",
+    "_postman_id": "34852b09-900d-4164-a6cd-6ca7c4461415",
     "name": "Assets",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "42993958",
-    "_collection_link": "https://go.postman.co/collection/42993958-1fd42752-77b7-4d17-9f74-61e677052e2d?source=collection_link"
+    "_exporter_id": "42992892",
+    "_collection_link": "https://go.postman.co/collection/42992892-34852b09-900d-4164-a6cd-6ca7c4461415?source=collection_link"
   },
   "item": [
     {
@@ -26,6 +26,40 @@
             {
               "key": "q",
               "value": "INV-2026-001"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "assets/",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"description\": \"Laptop Dell Latitude 3420\",\r\n    \"brand\": \"Dell\",\r\n    \"model\": \"Latitude 3420\",\r\n    \"serialNumber\": \"CN-09K123-ABCDE-421\",\r\n    \"barcode\": \"7501000123450\",\r\n    \"categoryId\": 1,\r\n    \"locationId\": 1,\r\n    \"invoiceId\": null,\r\n    \"entryDate\": \"2026-04-15\",\r\n    \"conditionStatus\": \"GOOD\",\r\n    \"lifecycleStatus\": \"REGISTERED\",\r\n    \"notes\": \"Equipo entregado a coordinación académica\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/assets?userId=1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "assets"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "1",
+              "type": "text"
             }
           ]
         }
