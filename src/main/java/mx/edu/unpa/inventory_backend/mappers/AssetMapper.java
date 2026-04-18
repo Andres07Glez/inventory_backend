@@ -4,6 +4,7 @@ import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.domains.Guardian;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -37,4 +38,7 @@ public interface AssetMapper {
                 guardian.getDepartment()
         );
     }
+    @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(target = "locationName", source = "location.name")
+    AssetResponseDTO toDto(Asset asset);
 }

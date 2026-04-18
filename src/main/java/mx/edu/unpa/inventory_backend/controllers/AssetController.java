@@ -5,7 +5,13 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
+import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
+import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
+import mx.edu.unpa.inventory_backend.services.AssetService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -57,5 +63,17 @@ public class AssetController {
     ) {
         AssetDetailResponse response = assetQueryService.findByCode(inventoryNumber);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    private final AssetService assetService;
+
+    @GetMapping
+    public ResponseEntity<Page<AssetResponseDTO>> getAssets(
+            @RequestParam(required = false) ConditionStatus conditionStatus,
+            @RequestParam(required = false) LifecycleStatus lifecycleStatus,
+            Pageable pageable) {
+
+        Page<AssetResponseDTO> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
+        return ResponseEntity.ok(assets);
     }
 }

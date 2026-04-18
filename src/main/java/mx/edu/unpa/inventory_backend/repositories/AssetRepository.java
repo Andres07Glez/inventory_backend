@@ -1,6 +1,11 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
+import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
+import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +35,12 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             WHERE a.inventoryNumber = :inventoryNumber
             """)
     Optional<Asset> findByInventoryNumberWithDetails(@Param("inventoryNumber") String inventoryNumber);
+    @EntityGraph(attributePaths = {"category", "location"})
+    @Query("SELECT a FROM Asset a WHERE " +
+            "(:condition IS NULL OR a.conditionStatus = :condition) AND " +
+            "(:lifecycle IS NULL OR a.lifecycleStatus = :lifecycle)")
+    Page<Asset> findByFilters(
+            @Param("condition") ConditionStatus condition,
+            @Param("lifecycle") LifecycleStatus lifecycle,
+            Pageable pageable);
 }
