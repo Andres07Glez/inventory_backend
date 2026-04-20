@@ -8,13 +8,12 @@ import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
-import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.http.HttpStatus;
-import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -82,15 +81,13 @@ public class AssetController {
                 .body(ApiResponse.ok(response));
     }
 
-    private final AssetService assetService;
-
     @GetMapping
-    public ResponseEntity<Page<AssetResponseDTO>> getAssets(
+    public ResponseEntity<Page<AssetResumeResponse>> getAssets(
             @RequestParam(required = false) ConditionStatus conditionStatus,
             @RequestParam(required = false) LifecycleStatus lifecycleStatus,
             Pageable pageable) {
 
-        Page<AssetResponseDTO> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
+        Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
         return ResponseEntity.ok(assets);
     }
 }

@@ -31,6 +31,10 @@ public class AssetAssignment {
     @JoinColumn(name = "location_id")
     private Location location;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_by", nullable = false)
+    private User assignedBy;
+
     @Column(nullable = false)
     private LocalDateTime assignedAt;
 
