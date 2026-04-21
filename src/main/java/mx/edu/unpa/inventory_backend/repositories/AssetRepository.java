@@ -33,4 +33,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             WHERE a.inventoryNumber = :inventoryNumber
             """)
     Optional<Asset> findByInventoryNumberWithDetails(@Param("inventoryNumber") String inventoryNumber);
+
+    @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
+    Long getNextId();
 }

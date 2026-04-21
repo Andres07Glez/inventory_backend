@@ -8,6 +8,7 @@ import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
+import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class AssetController {
 
     private final AssetQueryService assetQueryService;
     private final AssetService assetService;
+    private final AssetRepository assetRepository;
 
     @GetMapping("/lookup")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> lookupByCode(
@@ -74,5 +76,13 @@ public class AssetController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/next-folio")
+    public ResponseEntity<ApiResponse<String>> getNextFolio() {
+        Long nextId = assetRepository.getNextId();
+        int year = java.time.Year.now().getValue();
+        String folio = String.format("INV-%d-%05d", year, nextId);
+        return ResponseEntity.ok(ApiResponse.ok(folio));
     }
 }
