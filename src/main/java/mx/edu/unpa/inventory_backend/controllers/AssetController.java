@@ -2,13 +2,16 @@ package mx.edu.unpa.inventory_backend.controllers;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.request.UpdateConditionRequest;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
@@ -89,5 +92,19 @@ public class AssetController {
 
         Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
         return ResponseEntity.ok(assets);
+    }
+    @PatchMapping("/{id}/condition/{userId}")
+    public ResponseEntity<ApiResponse<UpdateConditionResponse>> updateCondition(
+            @PathVariable
+            @Positive(message = "El ID debe ser un número positivo")
+            Long id,
+            @PathVariable
+            Long userId,
+            @RequestBody
+            @Valid
+            UpdateConditionRequest request
+    ) {
+        UpdateConditionResponse response = assetService.updateCondition(id, request,userId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

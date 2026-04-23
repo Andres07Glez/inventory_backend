@@ -1,8 +1,10 @@
 package mx.edu.unpa.inventory_backend.services;
 
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.request.UpdateConditionRequest;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import org.springframework.data.domain.Page;
@@ -21,4 +23,7 @@ public interface AssetService {
     AssetResponseDTO registerAsset(AssetRequestDTO request, Long userId);
 
     Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, Pageable pageable);
+
+    @Transactional
+    UpdateConditionResponse updateCondition(Long assetId, UpdateConditionRequest request, Long updatedBy);
 }

@@ -3,6 +3,7 @@ package mx.edu.unpa.inventory_backend.services.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.request.UpdateConditionRequest;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.components.InventoryNumberGenerator;
 import mx.edu.unpa.inventory_backend.domains.Asset;
@@ -10,10 +11,13 @@ import mx.edu.unpa.inventory_backend.domains.Category;
 import mx.edu.unpa.inventory_backend.domains.Location;
 import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
+import mx.edu.unpa.inventory_backend.exceptions.InvalidAssetStateException;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import mx.edu.unpa.inventory_backend.mappers.AssetCommandMapper;
 import mx.edu.unpa.inventory_backend.mappers.AssetMapper;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.repositories.CategoryRepository;
@@ -36,6 +40,8 @@ public class AssetServiceImpl implements AssetService {
     private final UserRepository         userRepository;
     private final InventoryNumberGenerator inventoryNumberGenerator;
     private final AssetMapper assetMapper;
+    private final AssetCommandMapper assetCommandMapper;
+
 
     @Override
     @Transactional
@@ -151,6 +157,49 @@ public class AssetServiceImpl implements AssetService {
         dto.setCreatedByName(asset.getCreatedBy().getFullName());
         dto.setImageUrls(null); // imágenes se gestionan en endpoint separado
         return dto;
+    }
+    @Transactional
+    @Override
+    public UpdateConditionResponse updateCondition(Long assetId, UpdateConditionRequest request, Long updatedBy) {
+        log.info("Actualizando condición del bien ID={} → {}", assetId, request.conditionStatus());
+
+        Asset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró el bien con ID: " + assetId
+                ));
+        User user = userRepository.findById(updatedBy)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró el usuario con ID: " + assetId
+                ));
+
+        // Edge case: un bien dado de baja es inmutable
+        validateAssetIsModifiable(asset);
+
+        // Capturar el estado anterior ANTES de modificar (para la respuesta)
+        ConditionStatus previousCondition = asset.getConditionStatus();
+
+        // Aplicar el cambio
+        asset.setConditionStatus(request.conditionStatus());
+        asset.setUpdatedBy(user);
+
+        Asset savedAsset = assetRepository.save(asset);
+
+        log.info("Condición actualizada: bien={} | {} → {}",
+                savedAsset.getInventoryNumber(), previousCondition, request.conditionStatus());
+
+        return assetCommandMapper.toUpdateConditionResponse(savedAsset, previousCondition);
+    }
+
+    /**
+     * Valida que el bien se puede modificar dado su ciclo de vida actual.
+     * */
+    private void validateAssetIsModifiable(Asset asset) {
+        if (asset.getLifecycleStatus() == LifecycleStatus.DECOMMISSIONED) {
+            throw new InvalidAssetStateException(
+                    "No se puede modificar el bien '" + asset.getInventoryNumber() +
+                            "' porque está dado de baja (DECOMMISSIONED)."
+            );
+        }
     }
 
 }
