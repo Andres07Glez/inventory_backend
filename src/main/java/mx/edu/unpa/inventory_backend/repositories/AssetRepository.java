@@ -46,4 +46,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             @Param("condition") ConditionStatus condition,
             @Param("lifecycle") LifecycleStatus lifecycle,
             Pageable pageable);
+
+    @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
+    Long getNextId();
 }

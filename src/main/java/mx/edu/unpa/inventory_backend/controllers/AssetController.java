@@ -14,6 +14,7 @@ import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ public class AssetController {
 
     private final AssetQueryService assetQueryService;
     private final AssetService assetService;
+    private final AssetRepository assetRepository;
 
     @GetMapping("/lookup")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> lookupByCode(
@@ -106,5 +108,13 @@ public class AssetController {
     ) {
         UpdateConditionResponse response = assetService.updateCondition(id, request,userId);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/next-folio")
+    public ResponseEntity<ApiResponse<String>> getNextFolio() {
+        Long nextId = assetRepository.getNextId();
+        int year = java.time.Year.now().getValue();
+        String folio = String.format("INV-%d-%05d", year, nextId);
+        return ResponseEntity.ok(ApiResponse.ok(folio));
     }
 }
