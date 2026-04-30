@@ -44,9 +44,16 @@ public class AssetAssignmentServiceImpl implements AssetAssignmentService {
         // 3. Validar la ubicación
         Location location = locationRepository.findById(request.locationId())
                 .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
-        // 2. Buscamos al usuario que está haciendo la asignación
+        // 3.2. Buscamos al usuario que está haciendo la asignación
         User assignedBy = userRepository.findById(request.assignedBy())
                 .orElseThrow(() -> new RuntimeException("Usuario asignador no encontrado"));
+
+        // 3.3: Cerrar la asignación activa anterior si existe
+        assignmentRepository.findActiveByAssetId(asset.getId())
+                .ifPresent(existing -> {
+                    existing.setReturnedAt(LocalDateTime.now());
+                    assignmentRepository.save(existing);
+                });
 
         // 4. Crear la asignación con la entidad de tu compañero
         AssetAssignment assignment = new AssetAssignment();

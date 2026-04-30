@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import org.springframework.data.domain.Page;
@@ -49,4 +50,34 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
     Long getNextId();
+
+    @Query(value = """
+    SELECT DISTINCT new mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO(
+        a.id, a.inventoryNumber, a.description, a.brand, a.model,
+        c.name, a.conditionStatus, a.lifecycleStatus, l.name, g.fullName
+    )
+    FROM Asset a
+    LEFT JOIN a.category c
+    LEFT JOIN a.location l
+    LEFT JOIN AssetAssignment aa ON aa.asset = a AND aa.returnedAt IS NULL
+    LEFT JOIN aa.guardian g
+    WHERE (:keyword IS NULL OR :keyword = '' OR
+           LOWER(a.inventoryNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.description)    LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.brand)          LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(c.name)           LIKE LOWER(CONCAT('%', :keyword, '%')))
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT a.id)
+    FROM Asset a
+    LEFT JOIN a.category c
+    LEFT JOIN AssetAssignment aa ON aa.asset = a AND aa.returnedAt IS NULL
+    WHERE (:keyword IS NULL OR :keyword = '' OR
+           LOWER(a.inventoryNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.description)    LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.brand)          LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(c.name)           LIKE LOWER(CONCAT('%', :keyword, '%')))
+    """)
+    Page<AssetSearchResponseDTO> searchAssetsWithCurrentGuardian(
+            @Param("keyword") String keyword, Pageable pageable);
 }
