@@ -10,6 +10,9 @@ import java.time.LocalDate;
 @Data
 public class AssetRequestDTO {
 
+    @Size(max = 30, message = "El número de inventario no puede superar 30 caracteres.")
+    private String inventoryNumber;
+
     @NotBlank(message = "La descripción es obligatoria")
     @Size(max = 500, message = "La descripción no puede exceder los 500 caracteres")
     private String description;
@@ -34,6 +37,8 @@ public class AssetRequestDTO {
     private Integer locationId;
 
     private Long invoiceId;
+
+    private LocalDate invoiceDate;
 
     @NotNull(message = "La fecha de entrada es obligatoria")
     private LocalDate entryDate;

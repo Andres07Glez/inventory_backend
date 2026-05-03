@@ -78,11 +78,26 @@ public class AssetController {
                 .body(ApiResponse.ok(response));
     }
 
-    @GetMapping("/next-folio")
+    /*@GetMapping("/next-folio")
     public ResponseEntity<ApiResponse<String>> getNextFolio() {
         Long nextId = assetRepository.getNextId();
         int year = java.time.Year.now().getValue();
         String folio = String.format("INV-%d-%05d", year, nextId);
+        return ResponseEntity.ok(ApiResponse.ok(folio));
+    }*/
+
+    /*@GetMapping("/next-folio")
+    public ResponseEntity<ApiResponse<String>> getNextFolio() {
+        Long nextId = assetRepository.getNextAutoIncrement();
+        int year = java.time.Year.now().getValue();
+        String folio = String.format("INV-%d-%05d", year, nextId);
+        return ResponseEntity.ok(ApiResponse.ok(folio));
+    }*/
+    @GetMapping("/next-folio")
+    public ResponseEntity<ApiResponse<String>> getNextFolio() {
+        int year = java.time.Year.now().getValue();
+        Long nextSeq = assetRepository.getNextSequence(year);
+        String folio = String.format("INV-%d-%05d", year, nextSeq);
         return ResponseEntity.ok(ApiResponse.ok(folio));
     }
 }

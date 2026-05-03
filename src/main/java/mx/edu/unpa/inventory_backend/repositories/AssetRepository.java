@@ -13,6 +13,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     boolean existsBySerialNumber(String serialNumber);
 
+    boolean existsByInvoiceId(Long invoiceId);
+
     @Query("""
             SELECT a FROM Asset a
             JOIN FETCH a.category
@@ -34,6 +36,17 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             """)
     Optional<Asset> findByInventoryNumberWithDetails(@Param("inventoryNumber") String inventoryNumber);
 
-    @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
-    Long getNextId();
+    /*@Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
+    Long getNextId();*/
+    /*@Query(value = "SELECT AUTO_INCREMENT FROM information_schema.TABLES " +
+            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets'",
+            nativeQuery = true)
+    Long getNextAutoIncrement();*/
+    @Query(value = """
+    SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(inventory_number, '-', -1) AS UNSIGNED)), 0) + 1
+    FROM assets
+    WHERE inventory_number REGEXP '^INV-[0-9]{4}-[0-9]{5}$'
+    AND SUBSTRING_INDEX(SUBSTRING_INDEX(inventory_number, '-', 2), '-', -1) = :year
+    """, nativeQuery = true)
+    Long getNextSequence(@Param("year") int year);
 }

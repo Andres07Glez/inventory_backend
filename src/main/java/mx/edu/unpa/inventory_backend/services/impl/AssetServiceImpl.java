@@ -2,20 +2,14 @@ package mx.edu.unpa.inventory_backend.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mx.edu.unpa.inventory_backend.domains.*;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.components.InventoryNumberGenerator;
-import mx.edu.unpa.inventory_backend.domains.Asset;
-import mx.edu.unpa.inventory_backend.domains.Category;
-import mx.edu.unpa.inventory_backend.domains.Location;
-import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
-import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
-import mx.edu.unpa.inventory_backend.repositories.CategoryRepository;
-import mx.edu.unpa.inventory_backend.repositories.LocationRepository;
-import mx.edu.unpa.inventory_backend.repositories.UserRepository;
+import mx.edu.unpa.inventory_backend.repositories.*;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AssetServiceImpl implements AssetService {
 
-    private final AssetRepository        assetRepository;
-    private final CategoryRepository     categoryRepository;
-    private final LocationRepository     locationRepository;
-    private final UserRepository         userRepository;
+    private final AssetRepository assetRepository;
+    private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
+    private final UserRepository userRepository;
+    private final InvoiceRepository invoiceRepository;
     private final InventoryNumberGenerator inventoryNumberGenerator;
+    private final jakarta.persistence.EntityManager entityManager;
 
     @Override
     @Transactional
@@ -51,6 +47,14 @@ public class AssetServiceImpl implements AssetService {
             location = locationRepository.findByIdAndIsActiveTrue(request.getLocationId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Ubicación no encontrada o inactiva: " + request.getLocationId()));
+        }
+
+        // 3.5 Resolver factura (opcional)
+        Invoice invoice = null;
+        if (request.getInvoiceId() != null) {
+            invoice = invoiceRepository.findById(request.getInvoiceId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Factura no encontrada: " + request.getInvoiceId()));
         }
 
         // 4. Validar unicidad de barcode
@@ -93,22 +97,52 @@ public class AssetServiceImpl implements AssetService {
         asset.setNotes(request.getNotes());
         asset.setCategory(category);
         asset.setLocation(location);
+
+        asset.setInvoice(invoice);
+        asset.setInvoiceDate(request.getInvoiceDate() != null
+                ? request.getInvoiceDate()
+                : (invoice != null ? invoice.getInvoiceDate() : null));
+
         asset.setEntryDate(request.getEntryDate());
         asset.setConditionStatus(condition);
         asset.setCreatedBy(creator);
         asset.setUpdatedBy(creator);
         // inventoryNumber se deja null temporalmente — se asigna tras el primer save
-        asset.setInventoryNumber("PENDING");
 
-        // 8. Primer save — MariaDB asigna el id autoincremental
+        //asset.setInventoryNumber("PENDING");
+        // ✅ Como debe quedar
+        boolean hasCustomNumber = request.getInventoryNumber() != null
+                && !request.getInventoryNumber().isBlank();
+        asset.setInventoryNumber(hasCustomNumber ? request.getInventoryNumber().trim() : "PENDING");
+
+        /* 8. Primer save — MariaDB asigna el id autoincremental
         Asset saved = assetRepository.save(asset);
-
         // 9. Generar y asignar el número de inventario con el id ya conocido
-        String inventoryNumber = inventoryNumberGenerator.generate(saved.getId());
+        /*String inventoryNumber = inventoryNumberGenerator.generate(saved.getId());
         saved.setInventoryNumber(inventoryNumber);
-
         // 10. Segundo save — actualiza solo el inventoryNumber
         saved = assetRepository.save(saved);
+        if ("PENDING".equals(saved.getInventoryNumber())) {
+            saved.setInventoryNumber(inventoryNumberGenerator.generate(saved.getId()));
+            saved = assetRepository.save(saved);
+        }*/
+        // 8. Primer save — MariaDB asigna el id
+        Asset saved = assetRepository.save(asset);
+
+        // 9. Flush para obtener el ID real sin cerrar la transacción
+        entityManager.flush();
+
+        // 10. Generar número de inventario y actualizar solo ese campo
+        if ("PENDING".equals(saved.getInventoryNumber())) {
+            String inventoryNumber = inventoryNumberGenerator.generate(saved.getId());
+            saved.setInventoryNumber(inventoryNumber);
+            // UPDATE de un solo campo sin disparar otro ciclo de AUTO_INCREMENT
+            entityManager.createQuery(
+                            "UPDATE Asset a SET a.inventoryNumber = :inv WHERE a.id = :id")
+                    .setParameter("inv", inventoryNumber)
+                    .setParameter("id", saved.getId())
+                    .executeUpdate();
+        }
 
         log.info("Bien registrado: {} por usuario id={}", saved.getInventoryNumber(), userId);
 

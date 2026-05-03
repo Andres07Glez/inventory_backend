@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,42 +10,51 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "invoices")
-@Getter
-@Setter
+@Getter @Setter @NoArgsConstructor
 public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "invoice_number", nullable = false, unique = true, length = 100)
-    private String invoiceNumber; // Número de factura del proveedor
+    @Column(nullable = false, unique = true, length = 100)
+    private String invoiceNumber;
 
     @Column(length = 200)
-    private String supplier; // Nombre del proveedor
+    private String supplier;
 
-    @Column(name = "invoice_date", nullable = false)
-    private LocalDate invoiceDate; // Fecha impresa en la factura
+    @Column(nullable = false)
+    private LocalDate invoiceDate;
 
-    @Column(name = "total_amount", precision = 12, scale = 2)
+    @Column(precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(name = "document_path", length = 500)
-    private String documentPath; // Ruta al PDF o imagen digitalizada
+    @Column(length = 500)
+    private String documentPath;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy; // Usuario que registró la factura
+    @JoinColumn(name = "created_by", nullable = false, updatable = false)
+    private User createdBy;
 
     @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+    private void prePersist() {
+        createdAt = LocalDateTime.now();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Invoice inv)) return false;
+        return id != null && id.equals(inv.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
 
 }
