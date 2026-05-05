@@ -12,6 +12,7 @@ import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
+import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/assets")
@@ -116,5 +119,22 @@ public class AssetController {
         int year = java.time.Year.now().getValue();
         String folio = String.format("INV-%d-%05d", year, nextId);
         return ResponseEntity.ok(ApiResponse.ok(folio));
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<AssetDetailResponse>> findById(
+            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(assetQueryService.findById(id)));
+    }
+    @GetMapping("/{id}/assignments")
+    public ResponseEntity<ApiResponse<List<AssignmentHistoryResponse>>> getAssignmentHistory(
+            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(assetQueryService.findAssignmentHistory(id)));
+    }
+
+    @PatchMapping("/{id}/condition")
+    public ResponseEntity<ApiResponse<UpdateConditionResponse>> updateCondition(
+            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,
+            @RequestBody @Valid UpdateConditionRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(assetService.updateCondition(id, request,1L)));// 1L sustituir por usuarioId
     }
 }

@@ -49,4 +49,12 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
     Long getNextId();
+
+    @Query("""
+            SELECT a FROM Asset a
+            JOIN FETCH a.category
+            LEFT JOIN FETCH a.location
+            WHERE a.id = :id
+            """)
+    Optional<Asset> findByIdWithDetails(@Param("id") Long id);
 }

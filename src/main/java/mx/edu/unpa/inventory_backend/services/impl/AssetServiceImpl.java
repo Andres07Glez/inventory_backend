@@ -169,7 +169,7 @@ public class AssetServiceImpl implements AssetService {
                 ));
         User user = userRepository.findById(updatedBy)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontró el usuario con ID: " + assetId
+                        "No se encontró el usuario con ID: " + updatedBy
                 ));
 
         // Edge case: un bien dado de baja es inmutable
