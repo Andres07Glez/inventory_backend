@@ -23,20 +23,16 @@ public class GuardianController {
 
     private final GuardianService guardianService;
 
-    // ── GET /api/v1/guardians ─────────────────────────────────────────────────
     /**
      * Lista los resguardantes activos con paginación.
-     * Ejemplo: GET /api/v1/guardians?page=0&size=20&sort=fullName,asc
      */
     @GetMapping
     public ResponseEntity<Page<GuardianResponseDTO>> findAllActive(Pageable pageable) {
         return ResponseEntity.ok(guardianService.findAllActive(pageable));
     }
 
-    // ── GET /api/v1/guardians/search?q=... ────────────────────────────────────
     /**
      * Búsqueda por nombre, número de empleado o departamento.
-     * Ejemplo: GET /api/v1/guardians/search?q=karen&page=0&size=10
      */
     @GetMapping("/search")
     public ResponseEntity<Page<GuardianResponseDTO>> search(
@@ -49,13 +45,11 @@ public class GuardianController {
         return ResponseEntity.ok(guardianService.search(q, pageable));
     }
 
-    // ── GET /api/v1/guardians/{id} ────────────────────────────────────────────
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<GuardianResponseDTO>> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(guardianService.findById(id)));
     }
 
-    // ── POST /api/v1/guardians ────────────────────────────────────────────────
     @PostMapping
     public ResponseEntity<ApiResponse<GuardianResponseDTO>> create(
             @Valid @RequestBody GuardianRequestDTO request
@@ -66,7 +60,6 @@ public class GuardianController {
                 .body(ApiResponse.ok(created));
     }
 
-    // ── PUT /api/v1/guardians/{id} ────────────────────────────────────────────
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<GuardianResponseDTO>> update(
             @PathVariable Long id,
@@ -75,7 +68,6 @@ public class GuardianController {
         return ResponseEntity.ok(ApiResponse.ok(guardianService.update(id, request)));
     }
 
-    // ── DELETE /api/v1/guardians/{id} (baja lógica) ───────────────────────────
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivate(@PathVariable Long id) {
         guardianService.deactivate(id);

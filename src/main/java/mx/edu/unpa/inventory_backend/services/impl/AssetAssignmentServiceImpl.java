@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.*;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetAssignmentRequestDTO;
@@ -31,7 +32,7 @@ public class AssetAssignmentServiceImpl implements AssetAssignmentService {
 
         // 1. Validar el bien
         Asset asset = assetRepository.findById(request.assetId())
-                .orElseThrow(() -> new RuntimeException("Bien no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Bien no encontrado"));
 
         if (asset.getLifecycleStatus() == LifecycleStatus.DECOMMISSIONED) {
             throw new IllegalStateException("No se puede asignar un bien dado de baja");
