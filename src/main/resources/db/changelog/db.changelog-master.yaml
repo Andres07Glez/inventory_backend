@@ -6,4 +6,4 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/003-table-brands-incersions.sql
   - include:
-      file: db/changelog/changes/005-create-suppliers.sql
+      file: db/changelog/changes/004-create-suppliers.sql
