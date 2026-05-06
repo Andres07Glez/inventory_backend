@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
+import mx.edu.unpa.inventory_backend.dtos.dashboard.response.LocationStatDTO;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AssetRepository extends JpaRepository<Asset, Long> {
@@ -57,4 +59,34 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             WHERE a.id = :id
             """)
     Optional<Asset> findByIdWithDetails(@Param("id") Long id);
+
+    long countByLifecycleStatusNot(LifecycleStatus lifecycleStatus);
+
+    /** Bienes con un lifecycle específico (AVAILABLE, ASSIGNED, etc.) */
+    long countByLifecycleStatus(LifecycleStatus lifecycleStatus);
+
+    /**
+     * Bienes de una condición dada que NO estén dados de baja.
+     * Permite calcular las barras del donut chart sin contar bienes inactivos.
+     */
+    long countByConditionStatusAndLifecycleStatusNot(
+            ConditionStatus conditionStatus,
+            LifecycleStatus lifecycleStatus
+    );
+
+    // Top N ubicaciones con más bienes asignados actualmente.
+
+    @Query("""
+            SELECT new mx.edu.unpa.inventory_backend.dtos.dashboard.response.LocationStatDTO(
+                l.name,
+                l.campus,
+                COUNT(a.id)
+            )
+            FROM Asset a
+            JOIN a.location l
+            WHERE a.lifecycleStatus = mx.edu.unpa.inventory_backend.enums.LifecycleStatus.ASSIGNED
+            GROUP BY l.id, l.name, l.campus
+            ORDER BY COUNT(a.id) DESC
+            """)
+    List<LocationStatDTO> findTopLocationsByAssignedAssets(Pageable pageable);
 }
