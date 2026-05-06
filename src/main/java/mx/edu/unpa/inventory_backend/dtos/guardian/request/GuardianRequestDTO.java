@@ -22,6 +22,8 @@ public record GuardianRequestDTO(
         String phone,
 
         @Size(max = 150, message = "El departamento no puede exceder 150 caracteres")
-        String department
+        String department,
+
+        Integer locationId
 
 ) {}

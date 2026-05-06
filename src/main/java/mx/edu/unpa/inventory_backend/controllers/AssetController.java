@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.UpdateConditionRequest;
-import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.*;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
@@ -46,6 +46,15 @@ public class AssetController {
     ) {
         AssetDetailResponse response = assetQueryService.findByCode(q);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<AssetSearchResponseDTO>> searchAssets(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            Pageable pageable) {
+
+        Page<AssetSearchResponseDTO> result = assetService.searchAssets(keyword, pageable);
+        return ResponseEntity.ok(result);
     }
 
     /**

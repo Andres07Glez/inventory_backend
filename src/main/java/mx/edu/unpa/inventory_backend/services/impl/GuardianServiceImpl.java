@@ -4,10 +4,13 @@ package mx.edu.unpa.inventory_backend.services.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.Guardian;
+import mx.edu.unpa.inventory_backend.domains.Location;
 import mx.edu.unpa.inventory_backend.dtos.guardian.request.GuardianRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianResponseDTO;
+import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.GuardianMapper;
 import mx.edu.unpa.inventory_backend.repositories.GuardianRepository;
+import mx.edu.unpa.inventory_backend.repositories.LocationRepository;
 import mx.edu.unpa.inventory_backend.services.GuardianService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GuardianServiceImpl implements GuardianService {
 
-    private final GuardianRepository guardianRepository;
-    private final GuardianMapper guardianMapper;
+    private final GuardianRepository  guardianRepository;
+    private final LocationRepository locationRepository;
+    private final GuardianMapper      guardianMapper;
 
     // ── Crear ─────────────────────────────────────────────────────────────────
 
@@ -34,7 +38,8 @@ public class GuardianServiceImpl implements GuardianService {
         }
 
         Guardian guardian = guardianMapper.toEntity(request);
-        guardian.setIsActive(true); // valor explícito; el default del domain es fallback
+        guardian.setIsActive(true);
+        guardian.setLocation(resolveLocation(request.locationId()));
 
         return guardianMapper.toDto(guardianRepository.save(guardian));
     }
@@ -80,6 +85,11 @@ public class GuardianServiceImpl implements GuardianService {
         }
 
         guardianMapper.updateEntityFromDto(request, guardian);
+
+        // Actualizar ubicación: resolveLocation devuelve null si locationId es null,
+        // lo que permite limpiar la ubicación enviando null explícitamente.
+        guardian.setLocation(resolveLocation(request.locationId()));
+
         return guardianMapper.toDto(guardianRepository.save(guardian));
     }
 
@@ -93,11 +103,22 @@ public class GuardianServiceImpl implements GuardianService {
         guardianRepository.save(guardian);
     }
 
-    // ── Helper privado ────────────────────────────────────────────────────────
+    // ── Helpers privados ──────────────────────────────────────────────────────
 
     private Guardian getOrThrow(Long id) {
         return guardianRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Resguardante no encontrado con id: " + id));
+    }
+
+    /**
+     * Resuelve la entidad Location a partir del ID.
+     * Retorna null si locationId es null (resguardante sin ubicación base definida).
+     */
+    private Location resolveLocation(Integer locationId) {
+        if (locationId == null) return null;
+        return locationRepository.findByIdAndIsActiveTrue(locationId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ubicación no encontrada o inactiva con id: " + locationId));
     }
 }

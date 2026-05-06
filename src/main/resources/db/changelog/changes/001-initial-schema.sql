@@ -64,12 +64,15 @@ CREATE TABLE guardians (
                            email           VARCHAR(150)    NULL,
                            phone           VARCHAR(25)     NULL,
                            department      VARCHAR(150)    NULL      COMMENT 'Área o departamento',
+                           location_id     INT UNSIGNED    NULL      COMMENT 'Ubicación base del resguardante. Los bienes asignados heredan esta ubicación.',
                            is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
                            created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                            updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                            PRIMARY KEY (id),
                            UNIQUE KEY uq_guardians_employee_number (employee_number),
-                           INDEX idx_guardians_full_name (full_name)
+                           INDEX idx_guardians_full_name   (full_name),
+                           INDEX idx_guardians_location_id (location_id),
+                           CONSTRAINT fk_guardians_location FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Catálogo de resguardantes: personas responsables de los bienes.';

@@ -12,6 +12,7 @@ import mx.edu.unpa.inventory_backend.domains.Category;
 import mx.edu.unpa.inventory_backend.domains.Location;
 import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
@@ -232,6 +233,13 @@ public class AssetServiceImpl implements AssetService {
                             "' porque está dado de baja (DECOMMISSIONED)."
             );
         }
+    }
+
+    // Agrega la implementación
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AssetSearchResponseDTO> searchAssets(String keyword, Pageable pageable) {
+        return assetRepository.searchAssetsWithCurrentGuardian(keyword, pageable);
     }
 
 }
