@@ -5,5 +5,3 @@ databaseChangeLog:
       file: db/changelog/changes/002-incersions-test.sql
   - include:
       file: db/changelog/changes/003-table-brands-incersions.sql
-  - include:
-      file: db/changelog/changes/004-clean-assets.sql
