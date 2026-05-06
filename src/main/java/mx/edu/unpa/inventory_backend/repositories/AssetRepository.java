@@ -20,6 +20,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     boolean existsBySerialNumber(String serialNumber);
 
+    boolean existsByInvoiceId(Long invoiceId);
+
     @Query("""
             SELECT a FROM Asset a
             JOIN FETCH a.category
@@ -49,8 +51,6 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             @Param("lifecycle") LifecycleStatus lifecycle,
             Pageable pageable);
 
-    @Query("SELECT COALESCE(MAX(a.id), 0) + 1 FROM Asset a")
-    Long getNextId();
 
     @Query("""
             SELECT a FROM Asset a
@@ -89,4 +89,11 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             ORDER BY COUNT(a.id) DESC
             """)
     List<LocationStatDTO> findTopLocationsByAssignedAssets(Pageable pageable);
+    @Query(value = """
+    SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(inventory_number, '-', -1) AS UNSIGNED)), 0) + 1
+    FROM assets
+    WHERE inventory_number REGEXP '^INV-[0-9]{4}-[0-9]{5}$'
+    AND SUBSTRING_INDEX(SUBSTRING_INDEX(inventory_number, '-', 2), '-', -1) = :year
+    """, nativeQuery = true)
+    Long getNextSequence(@Param("year") int year);
 }

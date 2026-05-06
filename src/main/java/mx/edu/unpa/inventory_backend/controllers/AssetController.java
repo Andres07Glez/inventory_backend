@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/assets")
 @RequiredArgsConstructor
-@Validated  // Activa las validaciones de @RequestParam y @PathVariable
+@Validated
 public class AssetController {
 
     private final AssetQueryService assetQueryService;
@@ -115,9 +115,9 @@ public class AssetController {
 
     @GetMapping("/next-folio")
     public ResponseEntity<ApiResponse<String>> getNextFolio() {
-        Long nextId = assetRepository.getNextId();
         int year = java.time.Year.now().getValue();
-        String folio = String.format("INV-%d-%05d", year, nextId);
+        Long nextSeq = assetRepository.getNextSequence(year);
+        String folio = String.format("INV-%d-%05d", year, nextSeq);
         return ResponseEntity.ok(ApiResponse.ok(folio));
     }
     @GetMapping("/{id}")
