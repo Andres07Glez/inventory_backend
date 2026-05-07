@@ -34,6 +34,9 @@ public class Supplier {
     @Column(length = 300)
     private String address;
 
+    @Column(unique = true, length = 13)
+    private String rfc;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

@@ -9,6 +9,7 @@
 CREATE TABLE IF NOT EXISTS suppliers (
                                          id           BIGINT AUTO_INCREMENT PRIMARY KEY,
                                          name         VARCHAR(200) NOT NULL UNIQUE,
+                                         rfc          VARCHAR(13)  NULL UNIQUE COMMENT 'RFC del proveedor (formato mexicano)',
                                          contact_name VARCHAR(150),
                                          email        VARCHAR(150),
                                          phone        VARCHAR(25),
