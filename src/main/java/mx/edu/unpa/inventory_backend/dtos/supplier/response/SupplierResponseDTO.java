@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public record SupplierResponseDTO(
         Long           id,
         String         name,
+        String         rfc,
         String         contactName,
         String         email,
         String         phone,
