@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
     }
+    @ExceptionHandler(InvalidAssetStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidState(InvalidAssetStateException ex) {
+        log.warn("Operación inválida por estado del bien: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
 
     /**
      * 400 — Violación de @Valid en @RequestBody (para futuros endpoints POST/PUT).

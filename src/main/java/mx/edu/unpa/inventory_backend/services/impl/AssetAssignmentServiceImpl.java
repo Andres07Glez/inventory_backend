@@ -1,11 +1,13 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.*;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetAssignmentRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetAssignmentResponseDTO;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.AssetAssignmentMapper;
 import mx.edu.unpa.inventory_backend.repositories.*;
 import mx.edu.unpa.inventory_backend.services.AssetAssignmentService;
@@ -19,11 +21,10 @@ import java.time.LocalDateTime;
 public class AssetAssignmentServiceImpl implements AssetAssignmentService {
 
     private final AssetAssignmentRepository assignmentRepository;
-    private final AssetRepository assetRepository;
-    private final GuardianRepository guardianRepository; // Inyectado correctamente
-    private final LocationRepository locationRepository;
-    private final AssetAssignmentMapper mapper;
-    private final UserRepository userRepository;
+    private final AssetRepository           assetRepository;
+    private final GuardianRepository        guardianRepository;
+    private final AssetAssignmentMapper     mapper;
+    private final UserRepository            userRepository;
 
     @Override
     @Transactional
@@ -31,40 +32,56 @@ public class AssetAssignmentServiceImpl implements AssetAssignmentService {
 
         // 1. Validar el bien
         Asset asset = assetRepository.findById(request.assetId())
-                .orElseThrow(() -> new RuntimeException("Bien no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Bien no encontrado con id: " + request.assetId()));
 
         if (asset.getLifecycleStatus() == LifecycleStatus.DECOMMISSIONED) {
             throw new IllegalStateException("No se puede asignar un bien dado de baja");
         }
 
-        // 2. Validar el Guardián usando tu nuevo repositorio
+        // 2. Validar el resguardante
         Guardian guardian = guardianRepository.findById(request.guardianId())
-                .orElseThrow(() -> new RuntimeException("Resguardante no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resguardante no encontrado con id: " + request.guardianId()));
 
-        // 3. Validar la ubicación
-        Location location = locationRepository.findById(request.locationId())
-                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
-        // 2. Buscamos al usuario que está haciendo la asignación
+        // 3. La ubicación se hereda del resguardante.
+        //    Si el resguardante no tiene ubicación base registrada se lanza una excepción
+        //    clara para que el administrador la configure antes de asignar bienes.
+        Location location = guardian.getLocation();
+        if (location == null) {
+            throw new IllegalStateException(
+                    "El resguardante '" + guardian.getFullName() +
+                            "' no tiene una ubicación base registrada. " +
+                            "Actualice el resguardante antes de asignarle bienes.");
+        }
+
+        // 4. Validar usuario que realiza la asignación
         User assignedBy = userRepository.findById(request.assignedBy())
-                .orElseThrow(() -> new RuntimeException("Usuario asignador no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Usuario asignador no encontrado con id: " + request.assignedBy()));
 
-        // 4. Crear la asignación con la entidad de tu compañero
+        // 5. Cerrar la asignación activa anterior si existe (fix bug duplicados)
+        assignmentRepository.findActiveByAssetId(asset.getId())
+                .ifPresent(existing -> {
+                    existing.setReturnedAt(LocalDateTime.now());
+                    assignmentRepository.save(existing);
+                });
+
+        // 6. Crear la nueva asignación con la ubicación heredada del resguardante
         AssetAssignment assignment = new AssetAssignment();
         assignment.setAsset(asset);
         assignment.setGuardian(guardian);
         assignment.setLocation(location);
         assignment.setAssignedBy(assignedBy);
         assignment.setNotes(request.notes());
-        assignment.setAssignedAt(LocalDateTime.now()); // Llenado manual obligatorio
+        assignment.setAssignedAt(LocalDateTime.now());
 
-        // 5. Actualizar el estado físico del bien
+        // 7. Sincronizar el bien: ubicación y estado de ciclo de vida
         asset.setLifecycleStatus(LifecycleStatus.ASSIGNED);
         asset.setLocation(location);
         assetRepository.save(asset);
 
-        // 6. Guardar y retornar
-        AssetAssignment savedAssignment = assignmentRepository.save(assignment);
-
-        return mapper.toDto(savedAssignment);
+        // 8. Guardar y retornar
+        return mapper.toDto(assignmentRepository.save(assignment));
     }
 }
