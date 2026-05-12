@@ -5,5 +5,5 @@ import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetAssignmentRequestDT
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetAssignmentResponseDTO;
 
 public interface AssetAssignmentService {
-    AssetAssignmentResponseDTO assignAsset(AssetAssignmentRequestDTO request);
+    AssetAssignmentResponseDTO assignAsset(AssetAssignmentRequestDTO request,Long assignedById);
 }

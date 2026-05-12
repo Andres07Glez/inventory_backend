@@ -16,12 +16,14 @@ import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHist
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
+import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,12 +92,10 @@ public class AssetController {
     @PostMapping
     public ResponseEntity<ApiResponse<AssetResponseDTO>> registerAsset(
             @Valid @RequestBody AssetRequestDTO request,
-            @RequestParam Long userId  // temporal — se reemplaza por JWT en el módulo de seguridad
+            @AuthenticationPrincipal AuthenticatedUser currentUser
     ) {
-        AssetResponseDTO response = assetService.registerAsset(request, userId);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(response));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(assetService.registerAsset(request, currentUser.id())));
     }
 
     @GetMapping
@@ -107,19 +107,13 @@ public class AssetController {
         Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
         return ResponseEntity.ok(assets);
     }
-    @PatchMapping("/{id}/condition/{userId}")
+    @PatchMapping("/{id}/condition/")
     public ResponseEntity<ApiResponse<UpdateConditionResponse>> updateCondition(
-            @PathVariable
-            @Positive(message = "El ID debe ser un número positivo")
-            Long id,
-            @PathVariable
-            Long userId,
-            @RequestBody
-            @Valid
-            UpdateConditionRequest request
-    ) {
-        UpdateConditionResponse response = assetService.updateCondition(id, request,userId);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,
+            @Valid @RequestBody UpdateConditionRequest request,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                assetService.updateCondition(id, request, currentUser.id())));
     }
 
     @GetMapping("/next-folio")
