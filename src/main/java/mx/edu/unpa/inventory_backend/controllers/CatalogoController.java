@@ -49,11 +49,6 @@ public class CatalogoController {
         return ResponseEntity.ok(ApiResponse.ok(list));
     }
 
-    /*@GetMapping("/invoices")
-    public ResponseEntity<ApiResponse<List<Invoice>>> getInvoices() {
-        return ResponseEntity.ok(ApiResponse.ok(invoiceRepository.findAll()));
-    }*/
-
     @GetMapping("/brands")
     public ResponseEntity<ApiResponse<List<BrandResponseDTO>>> getBrands() {
         return ResponseEntity.ok(ApiResponse.ok(brandService.getAllActive()));
@@ -61,7 +56,7 @@ public class CatalogoController {
 
     @GetMapping("/invoices")
     public ResponseEntity<ApiResponse<List<InvoiceResponseDTO>>> getInvoices() {
-        return ResponseEntity.ok(ApiResponse.ok(invoiceService.getAll()));
+        return ResponseEntity.ok(ApiResponse.ok(invoiceService.getAllUnpaged()));
     }
 
 }

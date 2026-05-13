@@ -20,6 +20,7 @@ public interface AssetMapper {
 
 
     @Mapping(target = "id",           source = "asset.id")
+    @Mapping(target = "brand",        source = "asset.brand.name")
     @Mapping(target = "categoryName", source = "asset.category.name")
     @Mapping(target = "locationName", source = "asset.location.name")
     @Mapping(target = "building",     source = "asset.location.building")
@@ -42,6 +43,8 @@ public interface AssetMapper {
                 guardian.getDepartment()
         );
     }
+
+    @Mapping(target = "brand",        source = "brand.name")
     @Mapping(target = "categoryName", source = "category.name")
     @Mapping(target = "locationName", source = "location.name")
     AssetResumeResponse toDto(Asset asset);

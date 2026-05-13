@@ -15,8 +15,8 @@ public class InvoiceRequestDTO {
     @Size(max = 100, message = "El número de factura no puede superar 100 caracteres.")
     private String invoiceNumber;
 
-    @Size(max = 200, message = "El proveedor no puede superar 200 caracteres.")
-    private String supplier;
+    @NotNull(message = "El proveedor es obligatorio.")
+    private Long supplierId;
 
     @NotNull(message = "La fecha de factura es obligatoria.")
     private LocalDate invoiceDate;

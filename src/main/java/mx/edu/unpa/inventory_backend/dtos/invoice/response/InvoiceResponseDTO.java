@@ -13,7 +13,8 @@ public class InvoiceResponseDTO {
 
     private Long          id;
     private String        invoiceNumber;
-    private String        supplier;
+    private Long          supplierId;
+    private String        supplierName;
     private LocalDate invoiceDate;
     private BigDecimal totalAmount;
     private String        documentPath;

@@ -54,7 +54,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     @Query(value = """
     SELECT DISTINCT new mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO(
-        a.id, a.inventoryNumber, a.description, a.brand, a.model,
+        a.id, a.inventoryNumber, a.description, a.brand.name, a.model,
         c.name, a.conditionStatus, a.lifecycleStatus, l.name, g.fullName
     )
     FROM Asset a
@@ -65,7 +65,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     WHERE (:keyword IS NULL OR :keyword = '' OR
            LOWER(a.inventoryNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
            LOWER(a.description)    LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-           LOWER(a.brand)          LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.brand.name)     LIKE LOWER(CONCAT('%', :keyword, '%')) OR
            LOWER(c.name)           LIKE LOWER(CONCAT('%', :keyword, '%')))
     """,
             countQuery = """
@@ -76,7 +76,7 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     WHERE (:keyword IS NULL OR :keyword = '' OR
            LOWER(a.inventoryNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
            LOWER(a.description)    LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-           LOWER(a.brand)          LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+           LOWER(a.brand.name)     LIKE LOWER(CONCAT('%', :keyword, '%')) OR
            LOWER(c.name)           LIKE LOWER(CONCAT('%', :keyword, '%')))
     """)
     Page<AssetSearchResponseDTO> searchAssetsWithCurrentGuardian(

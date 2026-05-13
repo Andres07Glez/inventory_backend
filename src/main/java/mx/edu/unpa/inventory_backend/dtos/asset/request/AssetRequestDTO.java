@@ -17,8 +17,10 @@ public class AssetRequestDTO {
     @Size(max = 500, message = "La descripción no puede exceder los 500 caracteres")
     private String description;
 
-    @Size(max = 100)
-    private String brand;
+    /*@Size(max = 100)
+    private String brand;*/
+    @NotNull(message = "La marca es obligatoria")
+    private Integer brandId;
 
     @Size(max = 150)
     private String model;

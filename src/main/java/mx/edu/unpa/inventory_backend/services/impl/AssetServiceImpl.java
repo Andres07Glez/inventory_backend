@@ -45,6 +45,7 @@ public class AssetServiceImpl implements AssetService {
     private final InventoryNumberGenerator inventoryNumberGenerator;
     private final AssetMapper assetMapper;
     private final AssetCommandMapper assetCommandMapper;
+    private final BrandRepository brandRepository;
 
     private final jakarta.persistence.EntityManager entityManager;
 
@@ -78,6 +79,15 @@ public class AssetServiceImpl implements AssetService {
                             "Factura no encontrada: " + request.getInvoiceId()));
         }
 
+        // 3.6 Resolver marca activa por ID
+        Brand brand = null;
+        if (request.getBrandId() != null) {
+            brand = brandRepository.findById(request.getBrandId())
+                    .filter(Brand::getIsActive)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Marca no encontrada o inactiva: " + request.getBrandId()));
+        }
+
         // 4. Validar unicidad de barcode
         if (request.getBarcode() != null && !request.getBarcode().isBlank()) {
             if (assetRepository.existsByBarcodeAndBarcodeIsNotNull(request.getBarcode().trim())) {
@@ -109,7 +119,8 @@ public class AssetServiceImpl implements AssetService {
         // 7. Construir la entidad Asset (inventoryNumber se asigna después del save)
         Asset asset = new Asset();
         asset.setDescription(request.getDescription().trim());
-        asset.setBrand(request.getBrand());
+        //asset.setBrand(request.getBrand());
+        asset.setBrand(brand);
         asset.setModel(request.getModel());
         asset.setSerialNumber(request.getSerialNumber() != null
                 ? request.getSerialNumber().trim() : null);
@@ -128,14 +139,9 @@ public class AssetServiceImpl implements AssetService {
         asset.setConditionStatus(condition);
         asset.setCreatedBy(creator);
         asset.setUpdatedBy(creator);
-        // inventoryNumber se deja null temporalmente — se asigna tras el primer save
-
-        //asset.setInventoryNumber("PENDING");
-        // ✅ Como debe quedar
         boolean hasCustomNumber = request.getInventoryNumber() != null
                 && !request.getInventoryNumber().isBlank();
         asset.setInventoryNumber(hasCustomNumber ? request.getInventoryNumber().trim() : "PENDING");
-
 
         // 8. Primer save — MariaDB asigna el id
         Asset saved = assetRepository.save(asset);
@@ -160,12 +166,14 @@ public class AssetServiceImpl implements AssetService {
         // 11. Mapear a DTO de respuesta
         return toResponseDTO(saved);
     }
+
     @Transactional(readOnly = true)
     @Override
     public Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, Pageable pageable) {
         return assetRepository.findByFilters(condition, lifecycle, pageable)
                 .map(assetMapper::toDto); // Mapeamos cada entidad del Page a DTO automáticamente
     }
+
     // ---------------------------------------------------------------
     // Mapper manual — sin MapStruct porque AssetResponseDTO usa @Data
     // y mezcla campos de auditoría que no están en AssetDetailResponse
@@ -176,7 +184,8 @@ public class AssetServiceImpl implements AssetService {
         dto.setInventoryNumber(asset.getInventoryNumber());
         dto.setBarcode(asset.getBarcode());
         dto.setDescription(asset.getDescription());
-        dto.setBrand(asset.getBrand());
+        //dto.setBrand(asset.getBrand());
+        dto.setBrand(asset.getBrand() != null ? asset.getBrand().getName() : null);
         dto.setModel(asset.getModel());
         dto.setSerialNumber(asset.getSerialNumber());
         dto.setNotes(asset.getNotes());
@@ -188,7 +197,7 @@ public class AssetServiceImpl implements AssetService {
         dto.setLifecycleStatus(asset.getLifecycleStatus().name());
         dto.setCreatedAt(asset.getCreatedAt());
         dto.setCreatedByName(asset.getCreatedBy().getFullName());
-        dto.setImageUrls(null); // imágenes se gestionan en endpoint separado
+        dto.setImageUrls(null);
         return dto;
     }
     @Transactional

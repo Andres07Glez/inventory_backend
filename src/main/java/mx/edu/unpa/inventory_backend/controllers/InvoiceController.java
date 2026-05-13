@@ -6,6 +6,10 @@ import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.invoice.request.InvoiceRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.invoice.response.InvoiceResponseDTO;
 import mx.edu.unpa.inventory_backend.services.InvoiceService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,20 +23,26 @@ public class InvoiceController {
 
     private final InvoiceService invoiceService;
 
-    // ── Listar todas las facturas
+    // ── Listar facturas paginadas con búsqueda opcional
+    // Ejemplos:
+    //   GET /v1/invoices?page=0&size=10
+    //   GET /v1/invoices?q=Dell&page=0&size=10
+    //   GET /v1/invoices?q=FAC-2024&page=0&size=10
+    //   GET /v1/invoices?q=3&page=0&size=10   (busca por ID)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<InvoiceResponseDTO>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.ok(invoiceService.getAll()));
+    public ResponseEntity<ApiResponse<Page<InvoiceResponseDTO>>> getAll(
+            @RequestParam(required = false) String q,
+            @PageableDefault(size = 10, sort = "invoiceDate", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(invoiceService.getAll(q, pageable)));
     }
 
-    // ── Obtener factura por ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<InvoiceResponseDTO>> getById(
             @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(invoiceService.getById(id)));
     }
 
-    // ── Crear factura
     @PostMapping
     public ResponseEntity<ApiResponse<InvoiceResponseDTO>> create(
             @Valid @RequestBody InvoiceRequestDTO request,
@@ -42,7 +52,6 @@ public class InvoiceController {
                 .body(ApiResponse.ok(invoiceService.create(request, userId)));
     }
 
-    // ── Actualizar factura
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<InvoiceResponseDTO>> update(
             @PathVariable Long id,
@@ -50,7 +59,6 @@ public class InvoiceController {
         return ResponseEntity.ok(ApiResponse.ok(invoiceService.update(id, request)));
     }
 
-    // ── Eliminar factura (solo si no tiene bienes asociados)
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         invoiceService.delete(id);

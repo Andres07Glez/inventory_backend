@@ -20,8 +20,9 @@ public class Invoice {
     @Column(nullable = false, unique = true, length = 100)
     private String invoiceNumber;
 
-    @Column(length = 200)
-    private String supplier;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
 
     @Column(nullable = false)
     private LocalDate invoiceDate;

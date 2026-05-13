@@ -7,3 +7,7 @@ databaseChangeLog:
       file: db/changelog/changes/003-table-brands-incersions.sql
   - include:
       file: db/changelog/changes/004-create-suppliers.sql
+  - include:
+      file: db/changelog/changes/006-invoices-add-supplier-fk.sql
+  - include:
+      file: db/changelog/changes/007-assets-relate-brands.sql

@@ -3,6 +3,7 @@ package mx.edu.unpa.inventory_backend.services.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mx.edu.unpa.inventory_backend.domains.Invoice;
+import mx.edu.unpa.inventory_backend.domains.Supplier;
 import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.invoice.request.InvoiceRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.invoice.response.InvoiceResponseDTO;
@@ -10,11 +11,15 @@ import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.repositories.InvoiceRepository;
+import mx.edu.unpa.inventory_backend.repositories.SupplierRepository;
 import mx.edu.unpa.inventory_backend.repositories.UserRepository;
 import mx.edu.unpa.inventory_backend.services.InvoiceService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -22,13 +27,23 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
 
-    private final InvoiceRepository invoiceRepository;
-    private final AssetRepository assetRepository;
-    private final UserRepository userRepository;
+    private final InvoiceRepository  invoiceRepository;
+    private final AssetRepository    assetRepository;
+    private final UserRepository     userRepository;
+    private final SupplierRepository supplierRepository;
 
-    // ── Listar todas ──────────────────────────────────────────
+    // ── Listar con paginación y búsqueda opcional ─────────────
     @Override
-    public List<InvoiceResponseDTO> getAll() {
+    public Page<InvoiceResponseDTO> getAll(String query, Pageable pageable) {
+        boolean hasQuery = query != null && !query.isBlank();
+        return hasQuery
+                ? invoiceRepository.search(query.trim(), pageable).map(this::toDTO)
+                : invoiceRepository.findAllByOrderByInvoiceDateDesc(pageable).map(this::toDTO);
+    }
+
+    // ── Listar todas sin paginar (para catálogos/selectores) ──
+    @Override
+    public List<InvoiceResponseDTO> getAllUnpaged() {
         return invoiceRepository.findAllByOrderByInvoiceDateDesc()
                 .stream()
                 .map(this::toDTO)
@@ -46,18 +61,15 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional
     public InvoiceResponseDTO create(InvoiceRequestDTO request, Long userId) {
 
-        // 1. Validar número de factura único
         if (invoiceRepository.existsByInvoiceNumberIgnoreCase(request.getInvoiceNumber().trim())) {
             throw new DuplicateResourceException(
                     "Ya existe una factura con el número: " + request.getInvoiceNumber());
         }
 
-        // 2. Resolver usuario creador
         User creator = userRepository.findByIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuario no encontrado o inactivo: " + userId));
 
-        // 3. Construir entidad y persistir
         Invoice invoice = new Invoice();
         invoice.setCreatedBy(creator);
         mapRequestToEntity(request, invoice);
@@ -75,7 +87,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = findOrThrow(id);
         String newNumber = request.getInvoiceNumber().trim();
 
-        // Valida duplicado solo si el número cambió
         if (!invoice.getInvoiceNumber().equalsIgnoreCase(newNumber)
                 && invoiceRepository.existsByInvoiceNumberIgnoreCase(newNumber)) {
             throw new DuplicateResourceException(
@@ -94,7 +105,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     public void delete(Long id) {
         Invoice invoice = findOrThrow(id);
 
-        // Verifica que no tenga bienes asociados antes de eliminar
         if (assetRepository.existsByInvoiceId(id)) {
             throw new IllegalStateException(
                     "No se puede eliminar la factura porque tiene bienes asociados.");
@@ -104,7 +114,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         log.info("Factura eliminada id={}", id);
     }
 
-    // ── Helpers ───────────────────────────────────────────────
+    // ── Helpers privados ──────────────────────────────────────
     private Invoice findOrThrow(Long id) {
         return invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -113,19 +123,24 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private void mapRequestToEntity(InvoiceRequestDTO request, Invoice invoice) {
         invoice.setInvoiceNumber(request.getInvoiceNumber().trim());
-        invoice.setSupplier(request.getSupplier() != null
-                ? request.getSupplier().trim() : null);
         invoice.setInvoiceDate(request.getInvoiceDate());
-        invoice.setTotalAmount(request.getTotalAmount());
+        invoice.setTotalAmount(BigDecimal.ZERO);
         invoice.setDocumentPath(request.getDocumentPath());
         invoice.setNotes(request.getNotes());
+
+        Supplier supplier = supplierRepository.findById(request.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Proveedor no encontrado: " + request.getSupplierId()));
+        invoice.setSupplier(supplier);
     }
 
     private InvoiceResponseDTO toDTO(Invoice i) {
+        Supplier s = i.getSupplier();
         return new InvoiceResponseDTO(
                 i.getId(),
                 i.getInvoiceNumber(),
-                i.getSupplier(),
+                s != null ? s.getId()   : null,
+                s != null ? s.getName() : null,
                 i.getInvoiceDate(),
                 i.getTotalAmount(),
                 i.getDocumentPath(),
