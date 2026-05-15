@@ -7,6 +7,7 @@ import mx.edu.unpa.inventory_backend.dtos.brand.request.BrandRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.brand.response.BrandResponseDTO;
 import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
+import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.repositories.BrandRepository;
 import mx.edu.unpa.inventory_backend.services.BrandService;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 public class BrandServiceImpl implements BrandService {
 
     private final BrandRepository brandRepository;
+    private final AssetRepository assetRepository;
 
     @Override
     public List<BrandResponseDTO> getAllActive() {
@@ -76,6 +78,11 @@ public class BrandServiceImpl implements BrandService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Marca no encontrada: " + id));
 
+        if (assetRepository.existsByBrand(brand)) {
+            throw new DuplicateResourceException(
+                    "No se puede desactivar la marca \"" + brand.getName() +
+                            "\" porque está vinculada a uno o más bienes del inventario.");
+        }
         // Soft delete — no borra el registro, solo lo desactiva
         brand.setIsActive(false);
         brandRepository.save(brand);

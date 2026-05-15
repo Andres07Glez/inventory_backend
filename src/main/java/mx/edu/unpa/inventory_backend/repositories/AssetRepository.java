@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
+import mx.edu.unpa.inventory_backend.domains.Brand;
 import mx.edu.unpa.inventory_backend.dtos.dashboard.response.LocationStatDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
@@ -22,6 +23,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     boolean existsBySerialNumber(String serialNumber);
 
     boolean existsByInvoiceId(Long invoiceId);
+
+    boolean existsByBrand(Brand brand);
 
     @Query("""
             SELECT a FROM Asset a
