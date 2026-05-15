@@ -31,9 +31,13 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate # Liquibase hace el esquema, Hibernate solo valida
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGINS: ${CORS_ORIGINS}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      BASE_URL: ${BASE_URL}
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
 
 volumes:
   mariadb_data:

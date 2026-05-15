@@ -37,7 +37,8 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
     private static final String[] ANDROID_PUBLIC_ENDPOINTS = {
-            "/v1/assets/lookup"
+            "/v1/assets/lookup",
+            "/uploads/**"
     };
 
     @Bean
