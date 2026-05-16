@@ -28,7 +28,7 @@ public class AssetAssignmentServiceImpl implements AssetAssignmentService {
 
     @Override
     @Transactional
-    public AssetAssignmentResponseDTO assignAsset(AssetAssignmentRequestDTO request) {
+    public AssetAssignmentResponseDTO assignAsset(AssetAssignmentRequestDTO request,Long assignedById) {
 
         // 1. Validar el bien
         Asset asset = assetRepository.findById(request.assetId())
@@ -56,9 +56,9 @@ public class AssetAssignmentServiceImpl implements AssetAssignmentService {
         }
 
         // 4. Validar usuario que realiza la asignación
-        User assignedBy = userRepository.findById(request.assignedBy())
+        User assignedBy = userRepository.findByIdAndIsActiveTrue(assignedById)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Usuario asignador no encontrado con id: " + request.assignedBy()));
+                        "Usuario asignador no encontrado con id: " + assignedById));
 
         // 5. Cerrar la asignación activa anterior si existe (fix bug duplicados)
         assignmentRepository.findActiveByAssetId(asset.getId())

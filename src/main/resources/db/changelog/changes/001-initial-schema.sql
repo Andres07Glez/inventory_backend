@@ -8,7 +8,7 @@ CREATE TABLE users (
                        email           VARCHAR(150)     NOT NULL,
                        password_hash   VARCHAR(255)     NOT NULL  COMMENT 'BCrypt hash — nunca texto plano',
                        full_name       VARCHAR(150)     NOT NULL,
-                       employee_number VARCHAR(30)      NULL      COMMENT 'Número de empleado institucional',
+                       employee_number VARCHAR(30)      NOT NULL      COMMENT 'Numero de empleado institucional',
                        role            ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
                        is_active       BOOLEAN          NOT NULL DEFAULT TRUE,
                        last_login_at   TIMESTAMP        NULL,
@@ -16,13 +16,14 @@ CREATE TABLE users (
                        updated_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                        PRIMARY KEY (id),
                        UNIQUE KEY uq_users_username (username),
-                       UNIQUE KEY uq_users_email    (email)
+                       UNIQUE KEY uq_users_email    (email),
+                       UNIQUE KEY uq_users_employee_number (employee_number)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Usuarios del sistema. Roles: ADMIN acceso total, USER operación diaria.';
+  COMMENT = 'Usuarios del sistema. Roles: ADMIN acceso total, USER operacion diaria.';
 
 -- ============================================================
--- MÓDULO 2: CATÁLOGOS
+-- MODULO 2: CATALOGOS
 -- ============================================================
 
 CREATE TABLE categories (
@@ -39,7 +40,7 @@ CREATE TABLE categories (
                                 REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Categorías de bienes: Mobiliario, Equipo de Cómputo, Licencias, etc.';
+  COMMENT = 'Categorias de bienes: Mobiliario, Equipo de Computo, Licencias, etc.';
 
 -- ------------------------------------------------------------
 CREATE TABLE locations (
@@ -54,17 +55,17 @@ CREATE TABLE locations (
                            INDEX idx_locations_campus (campus)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Ubicaciones físicas: campus, edificio, área o laboratorio.';
+  COMMENT = 'Ubicaciones fisicas: campus, edificio, area o laboratorio.';
 
 -- ------------------------------------------------------------
 CREATE TABLE guardians (
                            id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                           employee_number VARCHAR(30)     NULL      COMMENT 'Número de empleado institucional',
+                           employee_number VARCHAR(30)     NULL      COMMENT 'Numero de empleado institucional',
                            full_name       VARCHAR(150)    NOT NULL,
                            email           VARCHAR(150)    NULL,
                            phone           VARCHAR(25)     NULL,
-                           department      VARCHAR(150)    NULL      COMMENT 'Área o departamento',
-                           location_id     INT UNSIGNED    NULL      COMMENT 'Ubicación base del resguardante. Los bienes asignados heredan esta ubicación.',
+                           department      VARCHAR(150)    NULL      COMMENT 'Area o departamento',
+                           location_id     INT UNSIGNED    NULL      COMMENT 'Ubicacion base del resguardante. Los bienes asignados heredan esta ubicacion.',
                            is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
                            created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                            updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -75,12 +76,12 @@ CREATE TABLE guardians (
                            CONSTRAINT fk_guardians_location FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Catálogo de resguardantes: personas responsables de los bienes.';
+  COMMENT = 'Catalogo de resguardantes: personas responsables de los bienes.';
 
 -- ------------------------------------------------------------
 CREATE TABLE invoices (
                           id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                          invoice_number VARCHAR(100)    NOT NULL  COMMENT 'Número de factura del proveedor',
+                          invoice_number VARCHAR(100)    NOT NULL  COMMENT 'Numero de factura del proveedor',
                           supplier       VARCHAR(200)    NULL      COMMENT 'Nombre del proveedor',
                           invoice_date   DATE            NOT NULL  COMMENT 'Fecha impresa en la factura',
                           total_amount   DECIMAL(12, 2)  NULL,
@@ -97,7 +98,7 @@ CREATE TABLE invoices (
   COMMENT = 'Facturas de compra que respaldan el ingreso de bienes al inventario.';
 
 -- ============================================================
--- MÓDULO 3: BIENES PATRIMONIALES (núcleo del sistema)
+-- MODULO 3: BIENES PATRIMONIALES (núcleo del sistema)
 -- ============================================================
 
 CREATE TABLE assets (
@@ -105,23 +106,23 @@ CREATE TABLE assets (
 
     -- Identificadores
                         inventory_number VARCHAR(30)     NOT NULL  COMMENT 'Generado por el sistema: INV-2026-00001',
-                        barcode          VARCHAR(100)    NULL      COMMENT 'Código de barras institucional para escaneo',
+                        barcode          VARCHAR(100)    NULL      COMMENT 'Codigo de barras institucional para escaneo',
 
-    -- Descripción
+    -- Descripcion
                         description      VARCHAR(500)    NOT NULL,
                         brand            VARCHAR(100)    NULL,
                         model            VARCHAR(150)    NULL,
-                        serial_number    VARCHAR(200)    NULL      COMMENT 'Aplica para equipo de cómputo y similares',
+                        serial_number    VARCHAR(200)    NULL      COMMENT 'Aplica para equipo de computo y similares',
                         notes            TEXT            NULL,
 
     -- Relaciones
                         category_id      INT UNSIGNED    NOT NULL,
-                        location_id      INT UNSIGNED    NULL      COMMENT 'NULL si aún no tiene ubicación asignada',
+                        location_id      INT UNSIGNED    NULL      COMMENT 'NULL si aun no tiene ubicacion asignada',
                         invoice_id       BIGINT UNSIGNED NULL      COMMENT 'Factura que sustenta el bien',
 
     -- Fechas
                         invoice_date     DATE            NULL      COMMENT 'Fecha de la factura (puede diferir de entry_date)',
-                        entry_date       DATE            NOT NULL  COMMENT 'Fecha de entrada física al almacén',
+                        entry_date       DATE            NOT NULL  COMMENT 'Fecha de entrada fisica al almacen',
 
     -- Estado (dos dimensiones independientes — ver decisión de diseño arriba)
                         condition_status ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL DEFAULT 'GOOD'
@@ -137,7 +138,7 @@ CREATE TABLE assets (
     ) NOT NULL DEFAULT 'REGISTERED'
         COMMENT 'Ciclo de vida: REGISTERED, AVAILABLE, ASSIGNED, IN_MAINTENANCE, IN_WARRANTY, DECOMMISSIONED',
 
-    -- Auditoría
+    -- Auditoria
                         created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         created_by       BIGINT UNSIGNED NOT NULL,
@@ -181,9 +182,7 @@ CREATE TABLE asset_images (
   COMMENT = 'Evidencias fotográficas de los bienes. Solo se guarda la ruta, nunca el binario.';
 
 -- ============================================================
--- MÓDULO 4: ASIGNACIONES
--- Fuente de verdad del resguardante actual:
---   SELECT * FROM asset_assignments WHERE asset_id = ? AND returned_at IS NULL
+-- MODULO 4: ASIGNACIONES
 -- ============================================================
 
 CREATE TABLE asset_assignments (
@@ -207,10 +206,10 @@ CREATE TABLE asset_assignments (
                                    CONSTRAINT fk_aa_returned_by FOREIGN KEY (returned_by) REFERENCES users(id)     ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Historial de asignaciones. La fila con returned_at IS NULL es la asignación vigente.';
+  COMMENT = 'Historial de asignaciones. La fila con returned_at IS NULL es la asignacion vigente.';
 
 -- ============================================================
--- MÓDULO 5: INCIDENCIAS
+-- MODULO 5: INCIDENCIAS
 -- ============================================================
 
 CREATE TABLE incidents (
@@ -236,7 +235,7 @@ CREATE TABLE incidents (
                            CONSTRAINT fk_incidents_resolved_by FOREIGN KEY (resolved_by) REFERENCES users(id)  ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Incidencias reportadas (fallas o daños). El folio se formatea en el backend.';
+  COMMENT = 'Incidencias reportadas (fallas o danos). El folio se formatea en el backend.';
 
 -- Nota: el folio legible (INC-2026-00001) se construye en Spring Boot así:
 --   String folio = "INC-" + Year.now() + "-" + String.format("%05d", incident.getId());
@@ -256,11 +255,10 @@ CREATE TABLE incident_images (
                                  CONSTRAINT fk_ii_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Imágenes adjuntas a incidencias (evidencia fotográfica del problema).';
+  COMMENT = 'Imagenes adjuntas a incidencias (evidencia fotografica del problema).';
 
 -- ============================================================
--- MÓDULO 6: MANTENIMIENTO
--- Identificado como PRIMORDIAL en la entrevista con el jefe de almacén.
+-- MODULO 6: MANTENIMIENTO
 -- ============================================================
 
 CREATE TABLE maintenance_logs (
@@ -272,8 +270,8 @@ CREATE TABLE maintenance_logs (
                                   performed_by     VARCHAR(200)    NULL      COMMENT 'Técnico o empresa responsable',
                                   performed_date   DATE            NOT NULL,
                                   cost             DECIMAL(10, 2)  NULL,
-                                  condition_before ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condición antes del servicio',
-                                  condition_after  ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condición después del servicio',
+                                  condition_before ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condicion antes del servicio',
+                                  condition_after  ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condicion después del servicio',
                                   created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                   created_by       BIGINT UNSIGNED NOT NULL,
                                   PRIMARY KEY (id),
@@ -284,7 +282,7 @@ CREATE TABLE maintenance_logs (
                                   CONSTRAINT fk_ml_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Bitácora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantía).';
+  COMMENT = 'Bitacora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantia).';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

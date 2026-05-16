@@ -4,14 +4,19 @@ services:
     container_name: inventory_db
     environment:
       # Esta variable crea la base de datos automáticamente
-      MARIADB_DATABASE: inventory_db
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_USER: unpa_user
-      MARIADB_PASSWORD: unpa_password
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "unpa_user", "-punpa_password" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: .
@@ -20,12 +25,19 @@ services:
       - "8080:8080"
     environment:
       # IMPORTANTE: Dentro de la red de Docker, el host no es localhost, es el nombre del servicio ("db")
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/inventory_db
-      SPRING_DATASOURCE_USERNAME: unpa_user
-      SPRING_DATASOURCE_PASSWORD: unpa_password
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate # Liquibase hace el esquema, Hibernate solo valida
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      BASE_URL: ${BASE_URL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
 
 volumes:
   mariadb_data:

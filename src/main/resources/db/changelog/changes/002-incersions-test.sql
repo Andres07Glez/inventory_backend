@@ -4,8 +4,8 @@
 
 -- 1. USUARIOS (Password: 'password123' - Hash genérico para pruebas)
 INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
-                                                                                         ('admin_karen', 'karen.jimenez@unpa.edu.mx', '$2a$10$vI8BvF.Nf8p/S4fX0W6nUu6', 'Karen Jimenez Rendon', 'EMP-001', 'ADMIN'),
-                                                                                         ('operador1', 'operador@unpa.edu.mx', '$2a$10$vI8BvF.Nf8p/S4fX0W6nUu6', 'Juan Pérez', 'EMP-002', 'USER');
+                                                                                         ('admin_karen', 'karen.jimenez@unpa.edu.mx', '$2a$10$cGgoScHbjEMsVTbcVYd/Vuja8kG2WDFp980EXiaDR1XNtLUE0EKn.', 'Karen Jimenez Rendon', 'EMP-001', 'ADMIN'),
+                                                                                         ('operador1', 'operador@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Juan Pérez', 'EMP-002', 'USER');
 
 -- 2. UBICACIONES (Campus Loma Bonita)
 INSERT INTO locations (name, building, campus, description) VALUES

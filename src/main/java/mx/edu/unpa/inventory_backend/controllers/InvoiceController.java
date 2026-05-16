@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.invoice.request.InvoiceRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.invoice.response.InvoiceResponseDTO;
+import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.InvoiceService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,10 +48,9 @@ public class InvoiceController {
     @PostMapping
     public ResponseEntity<ApiResponse<InvoiceResponseDTO>> create(
             @Valid @RequestBody InvoiceRequestDTO request,
-            @RequestParam Long userId) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(invoiceService.create(request, userId)));
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(invoiceService.create(request, currentUser.id())));
     }
 
     @PutMapping("/{id}")
