@@ -2,7 +2,6 @@
 --changeset equipo:001-initial-schema
 --comment: Estructura completa del sistema de inventario patrimonial
 
-SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================================
 -- MÓDULO 1: USUARIOS
