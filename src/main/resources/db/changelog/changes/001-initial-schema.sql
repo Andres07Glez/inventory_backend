@@ -30,9 +30,9 @@ CREATE TABLE categories (
                             id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
                             name        VARCHAR(100) NOT NULL,
                             description VARCHAR(255) NULL,
-                            parent_id   INT UNSIGNED NULL COMMENT 'Permite subcategorías (máximo 2 niveles recomendado)',
-                            is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-                            created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            parent_id   INT UNSIGNED NULL      COMMENT 'Permite subcategorías (máximo 2 niveles recomendado)',
+                            is_active   BOOLEAN      NOT NULL  DEFAULT TRUE,
+                            created_at  TIMESTAMP    NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                             PRIMARY KEY (id),
                             UNIQUE KEY uq_categories_name (name),
                             INDEX idx_categories_parent_id (parent_id),
@@ -79,10 +79,44 @@ CREATE TABLE guardians (
   COMMENT = 'Catalogo de resguardantes: personas responsables de los bienes.';
 
 -- ------------------------------------------------------------
+CREATE TABLE brands (
+                        id         INT          NOT NULL AUTO_INCREMENT,
+                        name       VARCHAR(100) NOT NULL,
+                        is_active  BOOLEAN      NOT NULL DEFAULT TRUE,
+                        created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_brands_name (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Catálogo de marcas de bienes patrimoniales.';
+
+-- ------------------------------------------------------------
+CREATE TABLE suppliers (
+                           id           BIGINT       NOT NULL AUTO_INCREMENT,
+                           name         VARCHAR(200) NOT NULL,
+                           rfc          VARCHAR(13)  NULL     COMMENT 'RFC del proveedor (formato mexicano)',
+                           contact_name VARCHAR(150) NULL,
+                           email        VARCHAR(150) NULL,
+                           phone        VARCHAR(25)  NULL,
+                           address      VARCHAR(300) NULL,
+                           notes        TEXT         NULL,
+                           is_active    BOOLEAN      NOT NULL DEFAULT TRUE,
+                           created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           PRIMARY KEY (id),
+                           UNIQUE KEY uq_suppliers_name (name),
+                           UNIQUE KEY uq_suppliers_rfc  (rfc),
+                           INDEX idx_suppliers_name (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Catálogo de proveedores que suministran bienes a la institución.';
+
+-- ------------------------------------------------------------
 CREATE TABLE invoices (
                           id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                          invoice_number VARCHAR(100)    NOT NULL  COMMENT 'Numero de factura del proveedor',
-                          supplier       VARCHAR(200)    NULL      COMMENT 'Nombre del proveedor',
+                          invoice_number VARCHAR(100)    NOT NULL  COMMENT 'Número de factura del proveedor',
+                          supplier_id    BIGINT          NULL      COMMENT 'FK al catálogo de proveedores',
                           invoice_date   DATE            NOT NULL  COMMENT 'Fecha impresa en la factura',
                           total_amount   DECIMAL(12, 2)  NULL,
                           document_path  VARCHAR(500)    NULL      COMMENT 'Ruta al PDF/imagen de la factura digitalizada',
@@ -91,8 +125,8 @@ CREATE TABLE invoices (
                           created_by     BIGINT UNSIGNED NOT NULL,
                           PRIMARY KEY (id),
                           UNIQUE KEY uq_invoices_number (invoice_number),
-                          CONSTRAINT fk_invoices_created_by FOREIGN KEY (created_by)
-                              REFERENCES users(id) ON DELETE RESTRICT
+                          CONSTRAINT fk_invoices_supplier   FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+                          CONSTRAINT fk_invoices_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Facturas de compra que respaldan el ingreso de bienes al inventario.';
@@ -110,7 +144,7 @@ CREATE TABLE assets (
 
     -- Descripcion
                         description      VARCHAR(500)    NOT NULL,
-                        brand            VARCHAR(100)    NULL,
+                        brand_id         INT             NULL      COMMENT 'FK al catálogo de marcas',
                         model            VARCHAR(150)    NULL,
                         serial_number    VARCHAR(200)    NULL      COMMENT 'Aplica para equipo de computo y similares',
                         notes            TEXT            NULL,
@@ -124,7 +158,7 @@ CREATE TABLE assets (
                         invoice_date     DATE            NULL      COMMENT 'Fecha de la factura (puede diferir de entry_date)',
                         entry_date       DATE            NOT NULL  COMMENT 'Fecha de entrada fisica al almacen',
 
-    -- Estado (dos dimensiones independientes — ver decisión de diseño arriba)
+    -- Estado (dos dimensiones independientes)
                         condition_status ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL DEFAULT 'GOOD'
         COMMENT 'Condición física: GOOD=Bueno, REGULAR=Regular, BAD=Malo',
 
@@ -150,10 +184,12 @@ CREATE TABLE assets (
                         INDEX idx_assets_serial_number    (serial_number),
                         INDEX idx_assets_category_id      (category_id),
                         INDEX idx_assets_location_id      (location_id),
+                        INDEX idx_assets_brand_id         (brand_id),
                         INDEX idx_assets_lifecycle_status (lifecycle_status),
                         INDEX idx_assets_condition_status (condition_status),
                         INDEX idx_assets_entry_date       (entry_date),
 
+                        CONSTRAINT fk_assets_brand      FOREIGN KEY (brand_id)    REFERENCES brands(id)     ON DELETE SET NULL,
                         CONSTRAINT fk_assets_category   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
                         CONSTRAINT fk_assets_location   FOREIGN KEY (location_id) REFERENCES locations(id)  ON DELETE SET NULL,
                         CONSTRAINT fk_assets_invoice    FOREIGN KEY (invoice_id)  REFERENCES invoices(id)   ON DELETE SET NULL,
@@ -291,11 +327,23 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================================
 
 INSERT INTO categories (name, description, parent_id) VALUES
-                                                          ('Bienes Muebles',       'Mobiliario en general',                    NULL),
-                                                          ('Equipo de Cómputo',    'Computadoras y componentes tecnológicos',   NULL),
-                                                          ('Licencias de Software','Licencias físicas y electrónicas',          NULL),
-                                                          ('Climatización',        'Aires acondicionados y equipo de clima',    NULL),
-                                                          ('Equipo de Laboratorio','Instrumental y equipo especializado',       NULL),
-                                                          ('CPUs y Servidores',    'Unidades centrales y servidores',           2),
-                                                          ('Periféricos',          'Mouse, teclado, monitor, impresoras, etc.', 2),
-                                                          ('Laptops',              'Equipos portátiles',                        2);
+                                                          ('Bienes Muebles',        'Mobiliario en general',                    NULL),
+                                                          ('Equipo de Cómputo',     'Computadoras y componentes tecnológicos',   NULL),
+                                                          ('Licencias de Software', 'Licencias físicas y electrónicas',          NULL),
+                                                          ('Climatización',         'Aires acondicionados y equipo de clima',    NULL),
+                                                          ('Equipo de Laboratorio', 'Instrumental y equipo especializado',       NULL),
+                                                          ('CPUs y Servidores',     'Unidades centrales y servidores',           2),
+                                                          ('Periféricos',           'Mouse, teclado, monitor, impresoras, etc.', 2),
+                                                          ('Laptops',               'Equipos portátiles',                        2);
+
+INSERT INTO brands (name) VALUES
+                              ('Dell'),
+                              ('HP'),
+                              ('Lenovo'),
+                              ('Apple'),
+                              ('Epson'),
+                              ('LG'),
+                              ('Samsung'),
+                              ('Logitech'),
+                              ('Sony'),
+                              ('Cisco');
