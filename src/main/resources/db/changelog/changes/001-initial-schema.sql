@@ -1,19 +1,25 @@
 --liquibase formatted sql
 --changeset equipo:001-initial-schema
---comment: Estructura inicial
+--comment: Estructura completa del sistema de inventario patrimonial
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- MÓDULO 1: USUARIOS
+-- ============================================================
 
 CREATE TABLE users (
-                       id              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-                       username        VARCHAR(50)      NOT NULL,
-                       email           VARCHAR(150)     NOT NULL,
-                       password_hash   VARCHAR(255)     NOT NULL  COMMENT 'BCrypt hash — nunca texto plano',
-                       full_name       VARCHAR(150)     NOT NULL,
-                       employee_number VARCHAR(30)      NULL      COMMENT 'Número de empleado institucional',
-                       role            ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
-                       is_active       BOOLEAN          NOT NULL DEFAULT TRUE,
-                       last_login_at   TIMESTAMP        NULL,
-                       created_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                       id              BIGINT UNSIGNED       NOT NULL AUTO_INCREMENT,
+                       username        VARCHAR(50)           NOT NULL,
+                       email           VARCHAR(150)          NOT NULL,
+                       password_hash   VARCHAR(255)          NOT NULL  COMMENT 'BCrypt hash — nunca texto plano',
+                       full_name       VARCHAR(150)          NOT NULL,
+                       employee_number VARCHAR(30)           NULL      COMMENT 'Número de empleado institucional',
+                       role            ENUM('ADMIN', 'USER') NOT NULL  DEFAULT 'USER',
+                       is_active       BOOLEAN               NOT NULL  DEFAULT TRUE,
+                       last_login_at   TIMESTAMP             NULL,
+                       created_at      TIMESTAMP             NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+                       updated_at      TIMESTAMP             NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                        PRIMARY KEY (id),
                        UNIQUE KEY uq_users_username (username),
                        UNIQUE KEY uq_users_email    (email)
@@ -29,14 +35,13 @@ CREATE TABLE categories (
                             id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
                             name        VARCHAR(100) NOT NULL,
                             description VARCHAR(255) NULL,
-                            parent_id   INT UNSIGNED NULL COMMENT 'Permite subcategorías (máximo 2 niveles recomendado)',
-                            is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-                            created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            parent_id   INT UNSIGNED NULL      COMMENT 'Permite subcategorías (máximo 2 niveles recomendado)',
+                            is_active   BOOLEAN      NOT NULL  DEFAULT TRUE,
+                            created_at  TIMESTAMP    NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                             PRIMARY KEY (id),
                             UNIQUE KEY uq_categories_name (name),
                             INDEX idx_categories_parent_id (parent_id),
-                            CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id)
-                                REFERENCES categories(id) ON DELETE SET NULL
+                            CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Categorías de bienes: Mobiliario, Equipo de Cómputo, Licencias, etc.';
@@ -48,8 +53,8 @@ CREATE TABLE locations (
                            building    VARCHAR(100) NULL      COMMENT 'Edificio o bloque',
                            campus      VARCHAR(100) NULL      COMMENT 'Campus (Loma Bonita, Tuxtepec, etc.)',
                            description VARCHAR(255) NULL,
-                           is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-                           created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           is_active   BOOLEAN      NOT NULL  DEFAULT TRUE,
+                           created_at  TIMESTAMP    NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                            PRIMARY KEY (id),
                            INDEX idx_locations_campus (campus)
 ) ENGINE = InnoDB
@@ -65,9 +70,9 @@ CREATE TABLE guardians (
                            phone           VARCHAR(25)     NULL,
                            department      VARCHAR(150)    NULL      COMMENT 'Área o departamento',
                            location_id     INT UNSIGNED    NULL      COMMENT 'Ubicación base del resguardante. Los bienes asignados heredan esta ubicación.',
-                           is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
-                           created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                           updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           is_active       BOOLEAN         NOT NULL  DEFAULT TRUE,
+                           created_at      TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+                           updated_at      TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                            PRIMARY KEY (id),
                            UNIQUE KEY uq_guardians_employee_number (employee_number),
                            INDEX idx_guardians_full_name   (full_name),
@@ -78,20 +83,54 @@ CREATE TABLE guardians (
   COMMENT = 'Catálogo de resguardantes: personas responsables de los bienes.';
 
 -- ------------------------------------------------------------
+CREATE TABLE brands (
+                        id         INT          NOT NULL AUTO_INCREMENT,
+                        name       VARCHAR(100) NOT NULL,
+                        is_active  BOOLEAN      NOT NULL DEFAULT TRUE,
+                        created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_brands_name (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Catálogo de marcas de bienes patrimoniales.';
+
+-- ------------------------------------------------------------
+CREATE TABLE suppliers (
+                           id           BIGINT       NOT NULL AUTO_INCREMENT,
+                           name         VARCHAR(200) NOT NULL,
+                           rfc          VARCHAR(13)  NULL     COMMENT 'RFC del proveedor (formato mexicano)',
+                           contact_name VARCHAR(150) NULL,
+                           email        VARCHAR(150) NULL,
+                           phone        VARCHAR(25)  NULL,
+                           address      VARCHAR(300) NULL,
+                           notes        TEXT         NULL,
+                           is_active    BOOLEAN      NOT NULL DEFAULT TRUE,
+                           created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           PRIMARY KEY (id),
+                           UNIQUE KEY uq_suppliers_name (name),
+                           UNIQUE KEY uq_suppliers_rfc  (rfc),
+                           INDEX idx_suppliers_name (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Catálogo de proveedores que suministran bienes a la institución.';
+
+-- ------------------------------------------------------------
 CREATE TABLE invoices (
                           id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                           invoice_number VARCHAR(100)    NOT NULL  COMMENT 'Número de factura del proveedor',
-                          supplier       VARCHAR(200)    NULL      COMMENT 'Nombre del proveedor',
+                          supplier_id    BIGINT          NULL      COMMENT 'FK al catálogo de proveedores',
                           invoice_date   DATE            NOT NULL  COMMENT 'Fecha impresa en la factura',
                           total_amount   DECIMAL(12, 2)  NULL,
                           document_path  VARCHAR(500)    NULL      COMMENT 'Ruta al PDF/imagen de la factura digitalizada',
                           notes          TEXT            NULL,
-                          created_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          created_at     TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                           created_by     BIGINT UNSIGNED NOT NULL,
                           PRIMARY KEY (id),
                           UNIQUE KEY uq_invoices_number (invoice_number),
-                          CONSTRAINT fk_invoices_created_by FOREIGN KEY (created_by)
-                              REFERENCES users(id) ON DELETE RESTRICT
+                          CONSTRAINT fk_invoices_supplier   FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+                          CONSTRAINT fk_invoices_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Facturas de compra que respaldan el ingreso de bienes al inventario.';
@@ -109,7 +148,7 @@ CREATE TABLE assets (
 
     -- Descripción
                         description      VARCHAR(500)    NOT NULL,
-                        brand            VARCHAR(100)    NULL,
+                        brand_id         INT             NULL      COMMENT 'FK al catálogo de marcas',
                         model            VARCHAR(150)    NULL,
                         serial_number    VARCHAR(200)    NULL      COMMENT 'Aplica para equipo de cómputo y similares',
                         notes            TEXT            NULL,
@@ -123,7 +162,7 @@ CREATE TABLE assets (
                         invoice_date     DATE            NULL      COMMENT 'Fecha de la factura (puede diferir de entry_date)',
                         entry_date       DATE            NOT NULL  COMMENT 'Fecha de entrada física al almacén',
 
-    -- Estado (dos dimensiones independientes — ver decisión de diseño arriba)
+    -- Estado (dos dimensiones independientes)
                         condition_status ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL DEFAULT 'GOOD'
         COMMENT 'Condición física: GOOD=Bueno, REGULAR=Regular, BAD=Malo',
 
@@ -138,8 +177,8 @@ CREATE TABLE assets (
         COMMENT 'Ciclo de vida: REGISTERED, AVAILABLE, ASSIGNED, IN_MAINTENANCE, IN_WARRANTY, DECOMMISSIONED',
 
     -- Auditoría
-                        created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        updated_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        created_at       TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+                        updated_at       TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         created_by       BIGINT UNSIGNED NOT NULL,
                         updated_by       BIGINT UNSIGNED NOT NULL,
 
@@ -149,10 +188,12 @@ CREATE TABLE assets (
                         INDEX idx_assets_serial_number    (serial_number),
                         INDEX idx_assets_category_id      (category_id),
                         INDEX idx_assets_location_id      (location_id),
+                        INDEX idx_assets_brand_id         (brand_id),
                         INDEX idx_assets_lifecycle_status (lifecycle_status),
                         INDEX idx_assets_condition_status (condition_status),
                         INDEX idx_assets_entry_date       (entry_date),
 
+                        CONSTRAINT fk_assets_brand      FOREIGN KEY (brand_id)    REFERENCES brands(id)     ON DELETE SET NULL,
                         CONSTRAINT fk_assets_category   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
                         CONSTRAINT fk_assets_location   FOREIGN KEY (location_id) REFERENCES locations(id)  ON DELETE SET NULL,
                         CONSTRAINT fk_assets_invoice    FOREIGN KEY (invoice_id)  REFERENCES invoices(id)   ON DELETE SET NULL,
@@ -168,9 +209,9 @@ CREATE TABLE asset_images (
                               asset_id    BIGINT UNSIGNED NOT NULL,
                               file_path   VARCHAR(500)    NOT NULL  COMMENT 'Ruta relativa al archivo (file system o bucket)',
                               file_name   VARCHAR(255)    NOT NULL  COMMENT 'Nombre original del archivo',
-                              mime_type   VARCHAR(100)    NOT NULL DEFAULT 'image/jpeg',
-                              is_primary  BOOLEAN         NOT NULL DEFAULT FALSE COMMENT 'Imagen principal del bien en listados',
-                              uploaded_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                              mime_type   VARCHAR(100)    NOT NULL  DEFAULT 'image/jpeg',
+                              is_primary  BOOLEAN         NOT NULL  DEFAULT FALSE COMMENT 'Imagen principal del bien en listados',
+                              uploaded_at TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                               uploaded_by BIGINT UNSIGNED NOT NULL,
                               PRIMARY KEY (id),
                               INDEX idx_asset_images_asset_id (asset_id),
@@ -191,7 +232,7 @@ CREATE TABLE asset_assignments (
                                    asset_id    BIGINT UNSIGNED NOT NULL,
                                    guardian_id BIGINT UNSIGNED NOT NULL,
                                    location_id INT UNSIGNED    NULL      COMMENT 'Ubicación al momento de la asignación',
-                                   assigned_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                   assigned_at TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                                    returned_at TIMESTAMP       NULL      COMMENT 'NULL = asignación activa',
                                    assigned_by BIGINT UNSIGNED NOT NULL,
                                    returned_by BIGINT UNSIGNED NULL,
@@ -225,8 +266,8 @@ CREATE TABLE incidents (
                            resolution_notes      TEXT            NULL,
                            resolved_at           TIMESTAMP       NULL,
                            resolved_by           BIGINT UNSIGNED NULL,
-                           created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                           updated_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           created_at            TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+                           updated_at            TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                            created_by            BIGINT UNSIGNED NOT NULL,
                            PRIMARY KEY (id),
                            INDEX idx_incidents_asset_id (asset_id),
@@ -247,8 +288,8 @@ CREATE TABLE incident_images (
                                  incident_id BIGINT UNSIGNED NOT NULL,
                                  file_path   VARCHAR(500)    NOT NULL,
                                  file_name   VARCHAR(255)    NOT NULL,
-                                 mime_type   VARCHAR(100)    NOT NULL DEFAULT 'image/jpeg',
-                                 uploaded_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 mime_type   VARCHAR(100)    NOT NULL  DEFAULT 'image/jpeg',
+                                 uploaded_at TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                                  uploaded_by BIGINT UNSIGNED NOT NULL,
                                  PRIMARY KEY (id),
                                  INDEX idx_incident_images_incident_id (incident_id),
@@ -274,7 +315,7 @@ CREATE TABLE maintenance_logs (
                                   cost             DECIMAL(10, 2)  NULL,
                                   condition_before ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condición antes del servicio',
                                   condition_after  ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condición después del servicio',
-                                  created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  created_at       TIMESTAMP       NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                                   created_by       BIGINT UNSIGNED NOT NULL,
                                   PRIMARY KEY (id),
                                   INDEX idx_maintenance_asset_id       (asset_id),
@@ -289,15 +330,28 @@ CREATE TABLE maintenance_logs (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================
--- DATOS INICIALES (SEED)
+-- DATOS SEMILLA (SEED)
+-- Catálogos base requeridos para el funcionamiento del sistema.
 -- ============================================================
 
 INSERT INTO categories (name, description, parent_id) VALUES
-                                                          ('Bienes Muebles',       'Mobiliario en general',                    NULL),
-                                                          ('Equipo de Cómputo',    'Computadoras y componentes tecnológicos',   NULL),
-                                                          ('Licencias de Software','Licencias físicas y electrónicas',          NULL),
-                                                          ('Climatización',        'Aires acondicionados y equipo de clima',    NULL),
-                                                          ('Equipo de Laboratorio','Instrumental y equipo especializado',       NULL),
-                                                          ('CPUs y Servidores',    'Unidades centrales y servidores',           2),
-                                                          ('Periféricos',          'Mouse, teclado, monitor, impresoras, etc.', 2),
-                                                          ('Laptops',              'Equipos portátiles',                        2);
+                                                          ('Bienes Muebles',        'Mobiliario en general',                    NULL),
+                                                          ('Equipo de Cómputo',     'Computadoras y componentes tecnológicos',   NULL),
+                                                          ('Licencias de Software', 'Licencias físicas y electrónicas',          NULL),
+                                                          ('Climatización',         'Aires acondicionados y equipo de clima',    NULL),
+                                                          ('Equipo de Laboratorio', 'Instrumental y equipo especializado',       NULL),
+                                                          ('CPUs y Servidores',     'Unidades centrales y servidores',           2),
+                                                          ('Periféricos',           'Mouse, teclado, monitor, impresoras, etc.', 2),
+                                                          ('Laptops',               'Equipos portátiles',                        2);
+
+INSERT INTO brands (name) VALUES
+                              ('Dell'),
+                              ('HP'),
+                              ('Lenovo'),
+                              ('Apple'),
+                              ('Epson'),
+                              ('LG'),
+                              ('Samsung'),
+                              ('Logitech'),
+                              ('Sony'),
+                              ('Cisco');
