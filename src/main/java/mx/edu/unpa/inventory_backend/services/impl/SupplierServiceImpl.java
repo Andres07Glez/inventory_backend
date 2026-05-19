@@ -21,19 +21,27 @@ public class SupplierServiceImpl implements SupplierService {
     private final SupplierRepository supplierRepository;
     private final SupplierMapper     supplierMapper;
 
-    // ── Crear ─────────────────────────────────────────────────────────────────
+// ── Crear ─────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
     public SupplierResponseDTO create(SupplierRequestDTO request) {
+        // 1. Validar nombre duplicado
         if (supplierRepository.existsByName(request.name())) {
             throw new DuplicateResourceException(
                     "Ya existe un proveedor con el nombre: " + request.name());
         }
 
+        // 2. Validar RFC duplicado (si se proporciona)
+        if (request.rfc() != null && !request.rfc().isBlank()) {
+            if (supplierRepository.existsByRfc(request.rfc())) {
+                throw new DuplicateResourceException(
+                        "El RFC '" + request.rfc() + "' ya está registrado con otro proveedor.");
+            }
+        }
+
         Supplier supplier = supplierMapper.toEntity(request);
         supplier.setIsActive(true);
-
         return supplierMapper.toDto(supplierRepository.save(supplier));
     }
 
@@ -61,18 +69,29 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toDto(getOrThrow(id));
     }
 
-    // ── Actualizar ────────────────────────────────────────────────────────────
+// ── Actualizar ────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
     public SupplierResponseDTO update(Long id, SupplierRequestDTO request) {
         Supplier supplier = getOrThrow(id);
 
-        // Valida unicidad de nombre solo si cambió
+        // 1. Valida unicidad de nombre solo si cambió
         if (!supplier.getName().equalsIgnoreCase(request.name())
                 && supplierRepository.existsByNameAndIdNot(request.name(), id)) {
             throw new DuplicateResourceException(
                     "Ya existe un proveedor con el nombre: " + request.name());
+        }
+
+        // 2. Valida unicidad de RFC solo si cambió
+        if (request.rfc() != null && !request.rfc().isBlank()) {
+            // Solo verificamos si el RFC enviado es distinto al que ya tiene el registro
+            boolean rfcCambiado = supplier.getRfc() == null || !supplier.getRfc().equalsIgnoreCase(request.rfc());
+
+            if (rfcCambiado && supplierRepository.existsByRfcAndIdNot(request.rfc(), id)) {
+                throw new DuplicateResourceException(
+                        "El RFC '" + request.rfc() + "' ya está registrado con otro proveedor.");
+            }
         }
 
         supplierMapper.updateEntityFromDto(request, supplier);
