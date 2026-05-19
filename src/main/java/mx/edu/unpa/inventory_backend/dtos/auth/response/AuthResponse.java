@@ -1,6 +1,6 @@
 package mx.edu.unpa.inventory_backend.dtos.auth.response;
 
-import mx.edu.unpa.inventory_backend.domains.UserRole;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 
 public record AuthResponse(
         String token,
