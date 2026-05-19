@@ -1,14 +1,18 @@
 package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -30,10 +34,12 @@ public class User {
     @Column(name = "employee_number", length = 30)
     private String employeeNumber; // Número de empleado institucional
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role = UserRole.USER;
+    private UserRole role = UserRole.OPERADOR;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
@@ -51,7 +57,7 @@ public class User {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         if (this.isActive == null) this.isActive = true;
-        if (this.role == null) this.role = UserRole.USER;
+        if (this.role == null) this.role = UserRole.OPERADOR;
     }
 
     @PreUpdate

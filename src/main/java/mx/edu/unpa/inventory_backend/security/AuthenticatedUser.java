@@ -1,6 +1,6 @@
 package mx.edu.unpa.inventory_backend.security;
 
-import mx.edu.unpa.inventory_backend.domains.UserRole;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

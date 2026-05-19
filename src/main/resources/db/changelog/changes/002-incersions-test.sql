@@ -4,7 +4,7 @@
 
 INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
                                                                                          ('admin_karen', 'karen.jimenez@unpa.edu.mx', '$2a$10$cGgoScHbjEMsVTbcVYd/Vuja8kG2WDFp980EXiaDR1XNtLUE0EKn.', 'Karen Jimenez Rendon', 'EMP-001', 'ADMIN'),
-                                                                                         ('operador1', 'operador@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Juan Pérez', 'EMP-002', 'USER');
+                                                                                         ('operador1', 'operador@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Juan Pérez', 'EMP-002', 'OPERADOR');
 
 INSERT INTO locations (name, building, campus, description) VALUES
                                                                 ('Laboratorio de Cómputo A', 'Edificio L',              'Loma Bonita', 'Planta Alta, Aula 5'),
