@@ -13,6 +13,9 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
     boolean existsByNameAndIdNot(String name, Long id);
 
+    boolean existsByRfc(String rfc);
+    boolean existsByRfcAndIdNot(String rfc, Long id);
+
     Page<Supplier> findByIsActiveTrue(Pageable pageable);
 
     /**
