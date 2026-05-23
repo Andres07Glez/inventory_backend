@@ -11,10 +11,10 @@ INSERT INTO locations (name, building, campus, description) VALUES
                                                                 ('Oficina de Zootecnia',     'Edificio Administrativo', 'Loma Bonita', 'Cubículo 3'),
                                                                 ('Almacén General',          'Bodega Central',          'Loma Bonita', 'Área de recepción de bienes');
 
-INSERT INTO guardians (employee_number, full_name, email, department) VALUES
-                                                                          ('DOC-100', 'M.E. Yesenia Barrientos Arenal', 'ybarrientos@unpa.edu.mx', 'Zootecnia'),
-                                                                          ('DOC-101', 'Dr. Roberto García', 'rgarcia@unpa.edu.mx', 'Sistemas Automotrices'),
-                                                                          ('DOC-102', 'M.C. Laura Torres', 'ltorres@unpa.edu.mx', 'Investigación');
+INSERT INTO guardians (employee_number, full_name, email, department, location_id) VALUES
+                                                                          ('DOC-100', 'M.E. Yesenia Barrientos Arenal', 'ybarrientos@unpa.edu.mx', 'Zootecnia', 2),
+                                                                          ('DOC-101', 'Dr. Roberto García', 'rgarcia@unpa.edu.mx', 'Sistemas Automotrices', 1),
+                                                                          ('DOC-102', 'M.C. Laura Torres', 'ltorres@unpa.edu.mx', 'Investigación', 3);
 
 INSERT INTO suppliers (name, rfc, created_at, updated_at) VALUES
                                                               ('Dell México S.A. de C.V.', 'DME920101XX1', NOW(), NOW()),
