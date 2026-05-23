@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import mx.edu.unpa.inventory_backend.exceptions.InvalidIncidentStateException;
+import mx.edu.unpa.inventory_backend.exceptions.FileStorageExeption;
 import jakarta.validation.ConstraintViolationException;
 
 
@@ -115,5 +117,20 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Ocurrió un error interno. Contacte al administrador."));
     }
+/*
+    @ExceptionHandler(InvalidIncidentStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidIncidentState(InvalidIncidentStateException ex) {
+        log.warn("Operación inválida por estado de incidencia: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(FileStorageExeption.class)
+    public ResponseEntity<ApiResponse<Void>> handleFileStorage(FileStorageExeption ex) {
+        log.error("Error de almacenamiento de archivo: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("No se pudo guardar el documento adjunto."));
+    }
+ */
 }
 

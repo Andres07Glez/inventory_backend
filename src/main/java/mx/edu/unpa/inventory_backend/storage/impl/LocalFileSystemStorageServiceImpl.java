@@ -85,9 +85,12 @@ public class LocalFileSystemStorageServiceImpl implements StorageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no puede estar vacío");
         }
         String mimeType = file.getContentType();
+        System.out.println(mimeType);
+        log.error(mimeType);
         if (mimeType == null || !props.allowedMimeTypes().contains(mimeType)) {
+
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    "Tipo de archivo no permitido. Usa JPEG, PNG o WebP.");
+                    "Tipo de archivo no permitido");
         }
     }
 

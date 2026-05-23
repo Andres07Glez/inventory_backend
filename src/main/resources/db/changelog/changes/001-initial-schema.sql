@@ -258,6 +258,12 @@ CREATE TABLE incidents (
                            condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL
         COMMENT 'Snapshot de la condición física al momento de reportar',
                            resolution_notes      TEXT            NULL,
+                           closure_type          ENUM('STANDARD', 'DECOMMISSION') NULL
+        COMMENT 'Tipo de cierre: STANDARD=resolución normal, DECOMMISSION=baja definitiva del bien',
+                           decommission_justification TEXT NULL
+        COMMENT 'Dictamen técnico obligatorio cuando closure_type = DECOMMISSION',
+                           decommission_document_path VARCHAR(500) NULL
+        COMMENT 'Ruta relativa al acta administrativa en PDF (StorageService)',
                            resolved_at           TIMESTAMP       NULL,
                            resolved_by           BIGINT UNSIGNED NULL,
                            created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
