@@ -319,9 +319,14 @@ CREATE TABLE maintenance_logs (
                                   PRIMARY KEY (id),
                                   INDEX idx_maintenance_asset_id       (asset_id),
                                   INDEX idx_maintenance_performed_date (performed_date),
-                                  CONSTRAINT fk_ml_asset      FOREIGN KEY (asset_id)    REFERENCES assets(id)    ON DELETE RESTRICT,
-                                  CONSTRAINT fk_ml_incident   FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE SET NULL,
-                                  CONSTRAINT fk_ml_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
+                                  CONSTRAINT fk_ml_asset
+                                      FOREIGN KEY (asset_id)    REFERENCES assets(id)     ON DELETE RESTRICT,
+
+                                  CONSTRAINT fk_ml_incident
+                                      FOREIGN KEY (incident_id) REFERENCES incidents(id)  ON DELETE SET NULL,
+
+                                  CONSTRAINT fk_ml_created_by
+                                      FOREIGN KEY (created_by)  REFERENCES users(id)      ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Bitacora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantia).';
