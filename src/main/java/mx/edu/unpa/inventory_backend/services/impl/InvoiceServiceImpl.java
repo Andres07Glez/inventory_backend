@@ -14,6 +14,7 @@ import mx.edu.unpa.inventory_backend.repositories.InvoiceRepository;
 import mx.edu.unpa.inventory_backend.repositories.SupplierRepository;
 import mx.edu.unpa.inventory_backend.repositories.UserRepository;
 import mx.edu.unpa.inventory_backend.services.InvoiceService;
+import mx.edu.unpa.inventory_backend.storage.StorageService; // ← import nuevo
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final AssetRepository    assetRepository;
     private final UserRepository     userRepository;
     private final SupplierRepository supplierRepository;
+    private final StorageService     storageService; // ← dependencia nueva
 
     // ── Listar con paginación y búsqueda opcional ─────────────
     @Override
@@ -136,6 +138,12 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private InvoiceResponseDTO toDTO(Invoice i) {
         Supplier s = i.getSupplier();
+
+        // Construir URL pública solo si la factura tiene documento
+        String docUrl = (i.getDocumentPath() != null && !i.getDocumentPath().isBlank())
+                ? storageService.buildPublicUrl(i.getDocumentPath())
+                : null;
+
         return new InvoiceResponseDTO(
                 i.getId(),
                 i.getInvoiceNumber(),
@@ -144,6 +152,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 i.getInvoiceDate(),
                 i.getTotalAmount(),
                 i.getDocumentPath(),
+                docUrl,             // ← documentUrl (campo nuevo en el DTO)
                 i.getNotes(),
                 i.getCreatedAt(),
                 i.getCreatedBy() != null ? i.getCreatedBy().getFullName() : null
