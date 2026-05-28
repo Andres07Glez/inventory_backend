@@ -7,6 +7,7 @@ import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.response.UserDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.user.response.UserSummaryResponse;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.UserManagementService;
 import org.springframework.data.domain.Page;
@@ -29,10 +30,12 @@ public class UserManagementController {
 
     @GetMapping
     public ResponseEntity<Page<UserSummaryResponse>> findAll(
-            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String  search,
+            @RequestParam(required = false) UserRole role,
+            @RequestParam(required = false) Boolean isActive,
             @PageableDefault(size = 15, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        return ResponseEntity.ok(userManagementService.findAll(search, pageable));
+        return ResponseEntity.ok(userManagementService.findAll(search, role, isActive, pageable));
     }
 
     @GetMapping("/{id}")
@@ -64,5 +67,10 @@ public class UserManagementController {
         return ResponseEntity.ok(ApiResponse.ok(
                 userManagementService.toggleStatus(id, currentUser.id())
         ));
+    }
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<ApiResponse<UserDetailResponse>> resetPassword(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(userManagementService.resetPassword(id)));
     }
 }

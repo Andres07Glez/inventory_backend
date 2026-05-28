@@ -9,7 +9,7 @@ CREATE TABLE users (
                        password_hash   VARCHAR(255)     NOT NULL  COMMENT 'BCrypt hash — nunca texto plano',
                        full_name       VARCHAR(150)     NOT NULL,
                        employee_number VARCHAR(30)      NOT NULL      COMMENT 'Numero de empleado institucional',
-                       role            ENUM('ADMIN', 'OPERADOR','AUDITOR') NOT NULL DEFAULT 'OPERADOR',
+                       role            ENUM('ADMIN', 'OPERADOR','AUDITOR','GUARDIAN') NOT NULL DEFAULT 'OPERADOR',
                        is_active       BOOLEAN          NOT NULL DEFAULT TRUE,
                        last_login_at   TIMESTAMP        NULL,
                        created_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,

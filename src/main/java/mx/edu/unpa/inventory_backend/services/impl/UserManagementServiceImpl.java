@@ -6,6 +6,7 @@ import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.response.UserDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.user.response.UserSummaryResponse;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.UserMapper;
 import mx.edu.unpa.inventory_backend.repositories.UserRepository;
@@ -28,11 +29,10 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserSummaryResponse> findAll(String search, Pageable pageable) {
-        Page<User> page = (search != null && !search.isBlank())
-                ? userRepository.findBySearchTerm(search.trim(), pageable)
-                : userRepository.findAll(pageable);
-        return page.map(userMapper::toSummary);
+    public Page<UserSummaryResponse> findAll(String search, UserRole role, Boolean isActive, Pageable pageable) {
+        String term = (search != null && !search.isBlank()) ? search.trim() : null;
+        return userRepository.findWithFilters(term, role, isActive, pageable)
+                .map(userMapper::toSummary);
     }
 
     @Override
@@ -76,6 +76,13 @@ public class UserManagementServiceImpl implements UserManagementService {
         guardSelfModification(targetUserId, currentUserId, "No puedes desactivar tu propia cuenta.");
         User user = findOrThrow(targetUserId);
         user.setIsActive(!user.getIsActive());
+        return userMapper.toDetail(userRepository.save(user));
+    }
+
+    @Override
+    public UserDetailResponse resetPassword(Long targetUserId) {
+        User user = findOrThrow(targetUserId);
+        user.setPasswordHash(passwordEncoder.encode(user.getEmployeeNumber()));
         return userMapper.toDetail(userRepository.save(user));
     }
 
