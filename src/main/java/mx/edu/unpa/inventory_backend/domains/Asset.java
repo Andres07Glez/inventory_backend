@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"category", "location"})
+@ToString(exclude = {"category", "location", "invoice", "createdBy", "updatedBy"})
 public class Asset {
 
     @Id
@@ -32,8 +32,11 @@ public class Asset {
     @Column(nullable = false, length = 500)
     private String description;
 
-    @Column(length = 100)
-    private String brand;
+    /*@Column(length = 100)
+    private String brand;*/
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
 
     @Column(length = 150)
     private String model;
@@ -54,6 +57,10 @@ public class Asset {
     @JoinColumn(name = "location_id")
     private Location location;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id")
+    private Invoice invoice;
+
     @Column(name = "invoice_date")
     private LocalDate invoiceDate;
 
@@ -68,6 +75,15 @@ public class Asset {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private LifecycleStatus lifecycleStatus = LifecycleStatus.REGISTERED;
+
+    // Auditoría — obligatorios en BD (NOT NULL)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false, updatable = false)
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by", nullable = false)
+    private User updatedBy;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

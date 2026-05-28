@@ -31,6 +31,11 @@ public class Guardian {
     @Column(length = 150)
     private String department;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 

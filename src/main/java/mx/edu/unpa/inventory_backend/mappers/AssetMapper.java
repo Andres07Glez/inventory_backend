@@ -4,17 +4,23 @@ import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.domains.Guardian;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
+import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 
+import java.util.List;
+
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AssetMapper {
 
 
     @Mapping(target = "id",           source = "asset.id")
+    @Mapping(target = "brand",        source = "asset.brand.name")
     @Mapping(target = "categoryName", source = "asset.category.name")
     @Mapping(target = "locationName", source = "asset.location.name")
     @Mapping(target = "building",     source = "asset.location.building")
@@ -37,4 +43,18 @@ public interface AssetMapper {
                 guardian.getDepartment()
         );
     }
+
+    @Mapping(target = "brand",        source = "brand.name")
+    @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(target = "locationName", source = "location.name")
+    AssetResumeResponse toDto(Asset asset);
+
+    @Mapping(target = "guardianName",           source = "guardian.fullName")
+    @Mapping(target = "guardianEmployeeNumber", source = "guardian.employeeNumber")
+    @Mapping(target = "locationName",           source = "location.name")
+    @Mapping(target = "assignedByUsername",     source = "assignedBy.username")
+    AssignmentHistoryResponse toAssignmentHistoryResponse(AssetAssignment assignment);
+
+    // Mapea la lista completa de una sola vez (MapStruct genera el loop)
+    List<AssignmentHistoryResponse> toAssignmentHistoryResponseList(List<AssetAssignment> assignments);
 }
