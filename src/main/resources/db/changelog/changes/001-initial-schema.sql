@@ -258,6 +258,12 @@ CREATE TABLE incidents (
                            condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL
         COMMENT 'Snapshot de la condición física al momento de reportar',
                            resolution_notes      TEXT            NULL,
+                           closure_type          ENUM('STANDARD', 'DECOMMISSION') NULL
+        COMMENT 'Tipo de cierre: STANDARD=resolución normal, DECOMMISSION=baja definitiva del bien',
+                           decommission_justification TEXT NULL
+        COMMENT 'Dictamen técnico obligatorio cuando closure_type = DECOMMISSION',
+                           decommission_document_path VARCHAR(500) NULL
+        COMMENT 'Ruta relativa al acta administrativa en PDF (StorageService)',
                            resolved_at           TIMESTAMP       NULL,
                            resolved_by           BIGINT UNSIGNED NULL,
                            created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -313,9 +319,14 @@ CREATE TABLE maintenance_logs (
                                   PRIMARY KEY (id),
                                   INDEX idx_maintenance_asset_id       (asset_id),
                                   INDEX idx_maintenance_performed_date (performed_date),
-                                  CONSTRAINT fk_ml_asset      FOREIGN KEY (asset_id)    REFERENCES assets(id)    ON DELETE RESTRICT,
-                                  CONSTRAINT fk_ml_incident   FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE SET NULL,
-                                  CONSTRAINT fk_ml_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
+                                  CONSTRAINT fk_ml_asset
+                                      FOREIGN KEY (asset_id)    REFERENCES assets(id)     ON DELETE RESTRICT,
+
+                                  CONSTRAINT fk_ml_incident
+                                      FOREIGN KEY (incident_id) REFERENCES incidents(id)  ON DELETE SET NULL,
+
+                                  CONSTRAINT fk_ml_created_by
+                                      FOREIGN KEY (created_by)  REFERENCES users(id)      ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Bitacora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantia).';

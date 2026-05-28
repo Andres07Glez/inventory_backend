@@ -19,6 +19,8 @@ import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
+import mx.edu.unpa.inventory_backend.repositories.AssetSearchRepository;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResultDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +40,7 @@ public class AssetController {
     private final AssetQueryService assetQueryService;
     private final AssetService assetService;
     private final AssetRepository assetRepository;
+    private final AssetSearchRepository assetSearchRepository;
 
     @GetMapping("/lookup")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> lookupByCode(
@@ -57,6 +60,28 @@ public class AssetController {
 
         Page<AssetSearchResponseDTO> result = assetService.searchAssets(keyword, pageable);
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Typeahead de bienes para el flujo de creación de incidencias.
+     * Busca sobre: número de inventario, descripción, número de serie y código de barras.
+     */
+    @GetMapping("/search/typeahead") // <--- RUTA MODIFICADA PARA EVITAR CONFLICTO
+    public ResponseEntity<ApiResponse<List<AssetSearchResultDTO>>> searchTypeahead(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        if (q == null || q.trim().length() < 2) {
+            return ResponseEntity.ok(ApiResponse.ok(List.of()));
+        }
+
+        int MAX_LIMIT = 30; // Declarado aquí por simplicidad
+        int safeLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
+
+        List<AssetSearchResultDTO> results =
+                assetSearchRepository.searchForIncident(q.trim(), safeLimit);
+
+        return ResponseEntity.ok(ApiResponse.ok(results));
     }
 
     /**
