@@ -251,19 +251,13 @@ CREATE TABLE asset_assignments (
 CREATE TABLE incidents (
                            id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                            asset_id              BIGINT UNSIGNED NOT NULL,
+                           incident_date         DATE            NOT NULL DEFAULT (CURRENT_DATE)
+                               COMMENT 'Fecha en que ocurrió la incidencia (puede ser pasada, mínimo año 2002). Distinta de created_at que es la fecha de registro en el sistema.',
                            description           TEXT            NOT NULL  COMMENT 'Descripción del problema o falla',
-                           repair_type           ENUM('INTERNAL', 'EXTERNAL') NULL
-        COMMENT 'INTERNAL=Reparación interna, EXTERNAL=Proveedor externo',
+                           repair_type           ENUM('INTERNAL', 'EXTERNAL') NULL COMMENT 'INTERNAL=Reparación interna, EXTERNAL=Proveedor externo',
                            status                ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
-                           condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL
-        COMMENT 'Snapshot de la condición física al momento de reportar',
+                           condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL COMMENT 'Snapshot de la condición física al momento de reportar',
                            resolution_notes      TEXT            NULL,
-                           closure_type          ENUM('STANDARD', 'DECOMMISSION') NULL
-        COMMENT 'Tipo de cierre: STANDARD=resolución normal, DECOMMISSION=baja definitiva del bien',
-                           decommission_justification TEXT NULL
-        COMMENT 'Dictamen técnico obligatorio cuando closure_type = DECOMMISSION',
-                           decommission_document_path VARCHAR(500) NULL
-        COMMENT 'Ruta relativa al acta administrativa en PDF (StorageService)',
                            resolved_at           TIMESTAMP       NULL,
                            resolved_by           BIGINT UNSIGNED NULL,
                            created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -277,7 +271,7 @@ CREATE TABLE incidents (
                            CONSTRAINT fk_incidents_resolved_by FOREIGN KEY (resolved_by) REFERENCES users(id)  ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Incidencias reportadas (fallas o danos). El folio se formatea en el backend.';
+  COMMENT = 'Incidencias reportadas (fallas o danos). La tabla es exclusiva de incidencias.';
 
 -- Nota: el folio legible (INC-2026-00001) se construye en Spring Boot así:
 --   String folio = "INC-" + Year.now() + "-" + String.format("%05d", incident.getId());
@@ -300,7 +294,38 @@ CREATE TABLE incident_images (
   COMMENT = 'Imagenes adjuntas a incidencias (evidencia fotografica del problema).';
 
 -- ============================================================
--- MODULO 6: MANTENIMIENTO
+-- MODULO 6: BAJAS DE BIENES
+-- ============================================================
+
+CREATE TABLE asset_decommissions (
+                                     id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                     asset_id                BIGINT UNSIGNED NOT NULL,
+                                     incident_id             BIGINT UNSIGNED NULL COMMENT 'Incidencia de origen. NULL si la baja es directa (no nace de incidencia).',
+                                     justification           TEXT            NOT NULL COMMENT 'Dictamen técnico o justificación administrativa obligatoria',
+                                     document_path           VARCHAR(500)    NULL COMMENT 'Ruta relativa al acta PDF en StorageService',
+                                     decommission_date       DATE            NOT NULL COMMENT 'Fecha oficial en que se formaliza la baja',
+                                     status                  ENUM('PENDING', 'CONFIRMED') NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING=en proceso, CONFIRMED=baja definitiva',
+                                     created_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                     updated_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                     created_by              BIGINT UNSIGNED NOT NULL COMMENT 'Usuario que inicia el proceso de baja',
+                                     confirmed_by            BIGINT UNSIGNED NULL COMMENT 'Usuario ADMIN que confirma y finaliza la baja',
+                                     confirmed_at            TIMESTAMP       NULL,
+                                     PRIMARY KEY (id),
+                                     UNIQUE KEY uq_decommissions_asset_id (asset_id),
+                                     UNIQUE KEY uq_decommissions_incident_id (incident_id),
+                                     INDEX idx_decommissions_asset_id    (asset_id),
+                                     INDEX idx_decommissions_status      (status),
+                                     INDEX idx_decommissions_incident_id (incident_id),
+                                     CONSTRAINT fk_decomm_asset       FOREIGN KEY (asset_id)     REFERENCES assets(id)     ON DELETE RESTRICT,
+                                     CONSTRAINT fk_decomm_incident    FOREIGN KEY (incident_id)  REFERENCES incidents(id)  ON DELETE SET NULL,
+                                     CONSTRAINT fk_decomm_created_by  FOREIGN KEY (created_by)   REFERENCES users(id)      ON DELETE RESTRICT,
+                                     CONSTRAINT fk_decomm_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id)     ON DELETE SET NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Registro de bajas definitivas de bienes patrimoniales. Independiente de incidencias.';
+
+-- ============================================================
+-- MODULO 7: MANTENIMIENTO
 -- ============================================================
 
 CREATE TABLE maintenance_logs (

@@ -19,7 +19,7 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /** 404 — El bien no existe en el inventario */
+    /** 404 — Recurso no encontrado */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
         log.warn("Recurso no encontrado: {}", ex.getMessage());
@@ -27,18 +27,44 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
     }
+
+    /** 409 — Operación inválida por estado del bien */
     @ExceptionHandler(InvalidAssetStateException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidState(InvalidAssetStateException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleInvalidAssetState(InvalidAssetStateException ex) {
         log.warn("Operación inválida por estado del bien: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 400 — Violación de @Valid en @RequestBody (para futuros endpoints POST/PUT).
-     * Extrae el primer error de validación para dar un mensaje claro.
-     */
+    /** 409 — Transición de estado inválida en incidencia */
+    @ExceptionHandler(InvalidIncidentStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidIncidentState(InvalidIncidentStateException ex) {
+        log.warn("Operación inválida por estado de incidencia: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    /** 409 — Operación inválida sobre una baja de bien */
+    @ExceptionHandler(InvalidDecommissionStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidDecommissionState(InvalidDecommissionStateException ex) {
+        log.warn("Operación inválida sobre baja de bien: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    /** 500 — Error al almacenar o eliminar un archivo */
+    @ExceptionHandler(FileStorageExeption.class)
+    public ResponseEntity<ApiResponse<Void>> handleFileStorage(FileStorageExeption ex) {
+        log.error("Error de almacenamiento de archivo: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("No se pudo guardar el documento adjunto."));
+    }
+
+    /** 400 — Violación de @Valid en @RequestBody */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationErrors(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult()
@@ -54,11 +80,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(message));
     }
 
-    /**
-     * 400 — Violación de @Validated en @RequestParam / @PathVariable.
-     * ConstraintViolationException se lanza cuando falla @NotBlank, @Size, etc.
-     * en parámetros directos del controller (no en @RequestBody).
-     */
+    /** 400 — Violación de @Validated en @RequestParam / @PathVariable */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
         String message = ex.getConstraintViolations()
@@ -83,7 +105,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(message));
     }
 
-    /** 409 — Recurso duplicado: barcode o serial_number ya registrado */
+    /** 409 — Recurso duplicado */
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException ex) {
         log.warn("Recurso duplicado: {}", ex.getMessage());
@@ -91,6 +113,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ex.getMessage()));
     }
+
     /** 401 — Credenciales inválidas o token expirado */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
@@ -100,7 +123,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Credenciales inválidas o sesión expirada."));
     }
 
-    /** 403 — Usuario autenticado pero sin permisos */
+    /** 403 — Autenticado pero sin permisos */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Acceso denegado: {}", ex.getMessage());
@@ -117,20 +140,5 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Ocurrió un error interno. Contacte al administrador."));
     }
-/*
-    @ExceptionHandler(InvalidIncidentStateException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidIncidentState(InvalidIncidentStateException ex) {
-        log.warn("Operación inválida por estado de incidencia: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
-    }
-
-    @ExceptionHandler(FileStorageExeption.class)
-    public ResponseEntity<ApiResponse<Void>> handleFileStorage(FileStorageExeption ex) {
-        log.error("Error de almacenamiento de archivo: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("No se pudo guardar el documento adjunto."));
-    }
- */
 }
 

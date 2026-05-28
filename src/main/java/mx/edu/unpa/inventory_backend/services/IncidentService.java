@@ -14,6 +14,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * REFACTORIZACIÓN SP-16:
+ *   Se eliminó confirmDecommission(). La baja de un bien ahora es responsabilidad
+ *   de DecommissionService, completamente independiente de este módulo.
+ */
 public interface IncidentService {
 
     /** Abre una nueva incidencia. El bien debe existir y no estar dado de baja. */
@@ -27,35 +32,27 @@ public interface IncidentService {
      * @param status  filtra por estado; null = todos
      * @param assetId filtra por bien;   null = todos
      */
-    Page<IncidentSummaryDTO> list(IncidentStatus status, Long assetId, Pageable pageable);
+    Page<IncidentSummaryDTO> list(IncidentStatus status, Long assetId,
+                                  String folioQuery, Pageable pageable);
 
     /** Todas las incidencias de un bien, sin paginar. Para el tab en el detalle del bien. */
     List<IncidentSummaryDTO> listByAsset(Long assetId);
 
     /**
      * Avanza el estado de una incidencia:
-     *   OPEN → IN_PROGRESS
+     *   OPEN        → IN_PROGRESS
      *   IN_PROGRESS → RESOLVED
      *
-     * Para cerrar la incidencia usar {@link #close} o {@link #confirmDecommission}.
+     * Para cerrar la incidencia usar {@link #close}.
      */
     IncidentResponseDTO updateStatus(Long id, IncidentStatusUpdateDTO dto);
 
     /**
-     * Cierra la incidencia con resolución STANDARD (RESOLVED → CLOSED).
+     * Cierra la incidencia (RESOLVED → CLOSED, closureType = STANDARD).
      * Accesible para ADMIN y OPERADOR.
+     *
+     * Si la resolución requirió una baja del bien, esa baja se registra
+     * por separado en POST /v1/decommissions con el incidentId opcional.
      */
     IncidentResponseDTO close(Long id, IncidentCloseRequestDTO dto, Long closedById);
-
-    /**
-     * Cierra la incidencia con baja definitiva del bien (RESOLVED → CLOSED + DECOMMISSIONED).
-     * Requiere rol ADMIN. Operación atómica: cierra incidencia y actualiza lifecycle del bien.
-     *
-     * @param id             ID de la incidencia
-     * @param justification  Dictamen técnico obligatorio
-     * @param document       Acta administrativa en PDF
-     * @param adminId        ID del usuario ADMIN que confirma
-     */
-    IncidentResponseDTO confirmDecommission(Long id, String justification,
-                                            MultipartFile document, Long adminId) throws IOException;
 }

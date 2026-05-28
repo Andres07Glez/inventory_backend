@@ -5,6 +5,7 @@ import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.RepairType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -18,7 +19,9 @@ public record IncidentSummaryDTO(
         IncidentStatus status,
         ConditionStatus conditionAtIncident,
         RepairType repairType,
-        ClosureType closureType,
+        //ClosureType closureType,
+        //LocalDate localDate,
         LocalDateTime createdAt,
+        LocalDate incidentDate,
         String createdByName
 ) {}

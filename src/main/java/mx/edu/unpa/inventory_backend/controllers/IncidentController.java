@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,13 +28,28 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
+
+/**
+ * REFACTORIZACIÓN SP-16:
+ *   Se eliminó el endpoint POST /v1/incidents/{id}/decommission.
+ *   La baja de un bien es ahora responsabilidad de DecommissionController.
+ *
+ * Endpoints disponibles:
+ *   GET  /v1/incidents                     → listado paginado con filtros
+ *   GET  /v1/assets/{assetId}/incidents    → incidencias de un bien
+ *   GET  /v1/incidents/{id}               → detalle
+ *   POST /v1/incidents                    → crear incidencia
+ *   PATCH /v1/incidents/{id}/status       → avanzar estado (OPEN→IN_PROGRESS→RESOLVED)
+ *   POST /v1/incidents/{id}/close         → cerrar (RESOLVED→CLOSED, tipo STANDARD)
+ */
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class IncidentController {
 
     private final IncidentService incidentService;
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
+    // ── Consultas ─────────────────────────────────────────────────────────────
 
     /**
      * Listado global paginado con filtros opcionales.
@@ -43,11 +59,12 @@ public class IncidentController {
     public ResponseEntity<ApiResponse<Page<IncidentSummaryDTO>>> list(
             @RequestParam(required = false) IncidentStatus status,
             @RequestParam(required = false) Long assetId,
+            @RequestParam(required = false) String folio,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
 
         return ResponseEntity.ok(
-                ApiResponse.ok(incidentService.list(status, assetId, pageable)));
+                ApiResponse.ok(incidentService.list(status, assetId, folio, pageable)));
     }
 
     /**
@@ -72,6 +89,8 @@ public class IncidentController {
 
         return ResponseEntity.ok(ApiResponse.ok(incidentService.getById(id)));
     }
+
+    // ── Crear ─────────────────────────────────────────────────────────────────
 
     /**
      * Abre una nueva incidencia.
@@ -107,6 +126,10 @@ public class IncidentController {
     /**
      * Cierre STANDARD de la incidencia (RESOLVED → CLOSED).
      * Accesible para ADMIN y OPERADOR.
+     *
+     * Si esta resolución requirió dar de baja el bien, usar:
+     *   POST /v1/decommissions (con incidentId opcional para vincular)
+     *
      * POST /v1/incidents/{id}/close
      */
     @PostMapping("/v1/incidents/{id}/close")
@@ -117,33 +140,6 @@ public class IncidentController {
 
         return ResponseEntity.ok(
                 ApiResponse.ok(incidentService.close(id, dto, currentUser.id())));
-    }
-
-    // ── Baja definitiva (solo ADMIN) ──────────────────────────────────────────
-
-    /**
-     * Confirma la baja definitiva del bien vinculado a la incidencia.
-     * Transición: RESOLVED → CLOSED + asset.lifecycleStatus → DECOMMISSIONED.
-     * Operación atómica y transaccional.
-     *
-     * Requiere rol ADMIN. OPERADOR recibe 403.
-     *
-     * POST /v1/incidents/{id}/decommission   (multipart/form-data)
-     *   - justification : String (texto del dictamen técnico)
-     *   - document      : PDF   (acta administrativa firmada)
-     */
-    @PostMapping(value = "/v1/incidents/{id}/decommission",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<IncidentResponseDTO>> confirmDecommission(
-            @PathVariable @Positive Long id,
-            @RequestParam("justification") String justification,
-            @RequestParam("document") MultipartFile document,
-            @AuthenticationPrincipal AuthenticatedUser currentUser) throws IOException {
-
-        IncidentResponseDTO result =
-                incidentService.confirmDecommission(id, justification, document, currentUser.id());
-        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }
 

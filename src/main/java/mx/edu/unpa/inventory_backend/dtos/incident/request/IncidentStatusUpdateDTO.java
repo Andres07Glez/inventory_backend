@@ -17,11 +17,6 @@ import mx.edu.unpa.inventory_backend.enums.RepairType;
 public record IncidentStatusUpdateDTO(
 
         @NotNull(message = "El nuevo estado es obligatorio")
-        IncidentStatus status,
+        IncidentStatus status
 
-        /** Notas de resolución. Recomendado cuando se pasa a RESOLVED. */
-        String resolutionNotes,
-
-        /** Puede definirse o corregirse en cualquier transición previa al cierre. */
-        RepairType repairType
 ) {}

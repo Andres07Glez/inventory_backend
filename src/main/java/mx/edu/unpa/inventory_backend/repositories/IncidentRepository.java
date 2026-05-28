@@ -23,6 +23,8 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
             JOIN FETCH i.asset
             JOIN FETCH i.createdBy
             LEFT JOIN FETCH i.resolvedBy
+            LEFT JOIN FETCH i.images img
+            LEFT JOIN FETCH img.uploadedBy
             WHERE i.id = :id
             """)
     Optional<Incident> findByIdWithDetails(@Param("id") Long id);
@@ -53,16 +55,19 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
             LEFT JOIN FETCH i.resolvedBy
             WHERE (:status IS NULL OR i.status = :status)
               AND (:assetId IS NULL OR i.asset.id = :assetId)
-            ORDER BY i.createdAt DESC
+              AND (:idFromFolio IS NULL OR i.id = :idFromFolio)
+            ORDER BY i.incidentDate DESC, i.createdAt DESC
             """,
             countQuery = """
             SELECT COUNT(i) FROM Incident i
             WHERE (:status IS NULL OR i.status = :status)
               AND (:assetId IS NULL OR i.asset.id = :assetId)
+              AND (:idFromFolio IS NULL OR i.id = :idFromFolio)
             """)
     Page<Incident> findAllFiltered(
             @Param("status") IncidentStatus status,
             @Param("assetId") Long assetId,
+            @Param("idFromFolio") Long idFromFolio,
             Pageable pageable);
 
     /** Cuenta incidencias abiertas o en progreso para un bien. Útil antes de crear una nueva. */

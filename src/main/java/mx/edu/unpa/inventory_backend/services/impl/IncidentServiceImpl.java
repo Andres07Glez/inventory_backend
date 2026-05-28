@@ -28,25 +28,40 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.Year;
 import java.io.IOException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+/**
+ * REFACTORIZACIÓN SP-16:
+ *   Se eliminó confirmDecommission() y toda su lógica de baja (storage de PDF,
+ *   actualización de lifecycle_status, etc.).
+ *
+ *   La única responsabilidad de este servicio es gestionar el ciclo de vida
+ *   de las incidencias: OPEN → IN_PROGRESS → RESOLVED → CLOSED.
+ */
 @Service
 @RequiredArgsConstructor
 public class IncidentServiceImpl implements IncidentService {
 
-    private static final Set<String> ALLOWED_PDF = Set.of("application/pdf");
+    private static final LocalDate MIN_INCIDENT_DATE = LocalDate.of(2002, 1, 1);
 
-    private final IncidentRepository  incidentRepository;
-    private final AssetRepository     assetRepository;
-    private final UserRepository      userRepository;
-    private final StorageService storageService;
+    /** Patrón para extraer el ID numérico de un folio: INC-2026-00042 → 42 */
+    private static final Pattern FOLIO_PATTERN =
+            Pattern.compile("^INC-\\d{4}-(\\d+)$", Pattern.CASE_INSENSITIVE);
 
-    // ── Crear ──────────────────────────────────────────────────────────────────
+    private final IncidentRepository incidentRepository;
+    private final AssetRepository    assetRepository;
+    private final UserRepository     userRepository;
+    private final StorageService     storageService;
+
+    // ── Crear ─────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -61,10 +76,22 @@ public class IncidentServiceImpl implements IncidentService {
 
         User createdBy = requireUser(createdById);
 
+        // Fecha de la incidencia: usar la proporcionada o la fecha actual
+        LocalDate incidentDate = request.incidentDate() != null
+                ? request.incidentDate()
+                : LocalDate.now();
+
+        // Edge case: fecha mínima permitida
+        if (incidentDate.isBefore(MIN_INCIDENT_DATE)) {
+            throw new InvalidIncidentStateException(
+                    "La fecha de la incidencia no puede ser anterior al año 2002.");
+        }
+
         Incident incident = new Incident();
         incident.setAsset(asset);
+        incident.setIncidentDate(incidentDate);
         incident.setDescription(request.description());
-        incident.setConditionAtIncident(request.conditionAtIncident());
+        incident.setConditionAtIncident(asset.getConditionStatus());
         incident.setRepairType(request.repairType());
         incident.setStatus(IncidentStatus.OPEN);
         incident.setCreatedBy(createdBy);
@@ -82,9 +109,11 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<IncidentSummaryDTO> list(IncidentStatus status, Long assetId, Pageable pageable) {
+    public Page<IncidentSummaryDTO> list(IncidentStatus status, Long assetId,
+                                         String folioQuery, Pageable pageable) {
+        Long idFromFolio = extractIdFromFolio(folioQuery);
         return incidentRepository
-                .findAllFiltered(status, assetId, pageable)
+                .findAllFiltered(status, assetId, idFromFolio, pageable)
                 .map(this::toSummaryDTO);
     }
 
@@ -109,13 +138,6 @@ public class IncidentServiceImpl implements IncidentService {
 
         incident.setStatus(dto.status());
 
-        if (dto.resolutionNotes() != null && !dto.resolutionNotes().isBlank()) {
-            incident.setResolutionNotes(dto.resolutionNotes());
-        }
-        if (dto.repairType() != null) {
-            incident.setRepairType(dto.repairType());
-        }
-
         return toResponseDTO(incidentRepository.save(incident));
     }
 
@@ -135,58 +157,13 @@ public class IncidentServiceImpl implements IncidentService {
         User closedBy = requireUser(closedById);
 
         incident.setStatus(IncidentStatus.CLOSED);
-        incident.setClosureType(ClosureType.STANDARD);
         incident.setResolutionNotes(dto.resolutionNotes());
         incident.setResolvedAt(LocalDateTime.now());
         incident.setResolvedBy(closedBy);
 
-        if (dto.repairType() != null) {
+        /*if (dto.repairType() != null) {
             incident.setRepairType(dto.repairType());
-        }
-
-        return toResponseDTO(incidentRepository.save(incident));
-    }
-
-    // ── Cierre con BAJA DEFINITIVA (solo ADMIN) ───────────────────────────────
-
-    @Override
-    @Transactional
-    public IncidentResponseDTO confirmDecommission(Long id, String justification,
-                                                   MultipartFile document, Long adminId) throws IOException {
-
-        Incident incident = requireIncidentWithDetails(id);
-
-        if (incident.getStatus() != IncidentStatus.RESOLVED) {
-            throw new InvalidIncidentStateException(
-                    "La baja definitiva solo puede confirmarse desde estado RESOLVED. " +
-                            "Estado actual: " + incident.getStatus());
-        }
-
-        validatePdf(document);
-
-        if (justification == null || justification.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El dictamen técnico es obligatorio para procesar una baja definitiva.");
-        }
-
-        User admin = requireUser(adminId);
-
-        // Almacenar acta PDF
-        String subDir      = "incidents/" + id + "/docs";
-        String documentPath = storageService.store(document, subDir);
-
-        // Cerrar incidencia
-        incident.setStatus(IncidentStatus.CLOSED);
-        incident.setClosureType(ClosureType.DECOMMISSION);
-        incident.setDecommissionJustification(justification);
-        incident.setDecommissionDocumentPath(documentPath);
-        incident.setResolvedAt(LocalDateTime.now());
-        incident.setResolvedBy(admin);
-
-        // Dar de baja el bien — operación atómica dentro de la misma transacción
-        Asset asset = incident.getAsset();
-        asset.setLifecycleStatus(LifecycleStatus.DECOMMISSIONED);
-        assetRepository.save(asset);
+        }*/
 
         return toResponseDTO(incidentRepository.save(incident));
     }
@@ -194,11 +171,6 @@ public class IncidentServiceImpl implements IncidentService {
     // ── Helpers de mapeo ──────────────────────────────────────────────────────
 
     private IncidentResponseDTO toResponseDTO(Incident i) {
-        String docUrl = null;
-        if (i.getDecommissionDocumentPath() != null) {
-            docUrl = storageService.buildPublicUrl(i.getDecommissionDocumentPath());
-        }
-
         List<IncidentImageResponseDTO> imageDTOs = i.getImages().stream()
                 .map(img -> new IncidentImageResponseDTO(
                         img.getId(),
@@ -219,12 +191,10 @@ public class IncidentServiceImpl implements IncidentService {
                 i.getRepairType(),
                 i.getStatus(),
                 i.getConditionAtIncident(),
+                i.getIncidentDate(),
                 i.getResolutionNotes(),
                 i.getResolvedAt(),
                 i.getResolvedBy() != null ? i.getResolvedBy().getFullName() : null,
-                i.getClosureType(),
-                i.getDecommissionJustification(),
-                docUrl,
                 i.getCreatedAt(),
                 i.getCreatedBy().getFullName(),
                 imageDTOs
@@ -239,30 +209,40 @@ public class IncidentServiceImpl implements IncidentService {
                 i.getStatus(),
                 i.getConditionAtIncident(),
                 i.getRepairType(),
-                i.getClosureType(),
                 i.getCreatedAt(),
+                i.getIncidentDate(),
                 i.getCreatedBy().getFullName()
         );
     }
 
     // ── Utilidades ────────────────────────────────────────────────────────────
 
-    /**
-     * Folio legible. Ejemplo: INC-2026-00003.
-     * Nota: usa el ID de la BD, no el año de creación del registro.
-     * Si se necesita el año de la incidencia, adaptar pasando i.getCreatedAt().getYear().
-     */
     static String buildFolio(Long incidentId) {
         return "INC-" + Year.now().getValue() + "-" + String.format("%05d", incidentId);
     }
 
+    /* Edge case: el año en el folio se ignora deliberadamente — un admin puede
+     * buscar INC-2025-00042 estando en 2026 y debe encontrar el registro porque
+     * el folio se calcula con Year.now() en Java, no se almacena en DB.
+            * Para que la búsqueda sea consistente se filtra solo por el ID numérico.
+     */
+    static Long extractIdFromFolio(String folioQuery) {
+        if (folioQuery == null || folioQuery.isBlank()) return null;
+        Matcher m = FOLIO_PATTERN.matcher(folioQuery.trim());
+        if (!m.matches()) return null;
+        try {
+            return Long.parseLong(m.group(1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     /**
-     * Valida que la transición de estado sea la correcta en el flujo.
-     * Tabla de transiciones permitidas para este endpoint:
+     * Transiciones permitidas en el flujo normal de incidencias:
      *   OPEN        → IN_PROGRESS
      *   IN_PROGRESS → RESOLVED
      *
-     * RESOLVED → CLOSED se gestiona exclusivamente en /close y /decommission.
+     * RESOLVED → CLOSED se gestiona exclusivamente en /close.
      */
     private void validateTransition(IncidentStatus current, IncidentStatus next) {
         boolean valid = switch (current) {
@@ -274,33 +254,25 @@ public class IncidentServiceImpl implements IncidentService {
         if (!valid) {
             throw new InvalidIncidentStateException(
                     "Transición de estado inválida: " + current + " → " + next +
-                            ". Para cerrar una incidencia usa los endpoints /close o /decommission.");
-        }
-    }
-
-    private void validatePdf(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El acta administrativa en PDF es obligatoria.");
-        }
-        if (!ALLOWED_PDF.contains(file.getContentType())) {
-            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    "Solo se acepta un archivo PDF como acta de baja.");
+                            ". Para cerrar la incidencia usa el endpoint /close.");
         }
     }
 
     private Incident requireIncidentWithDetails(Long id) {
         return incidentRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Incidencia no encontrada: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Incidencia no encontrada: " + id));
     }
 
     private Asset requireAsset(Long assetId) {
         return assetRepository.findById(assetId)
-                .orElseThrow(() -> new ResourceNotFoundException("Bien no encontrado: " + assetId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Bien no encontrado: " + assetId));
     }
 
     private User requireUser(Long userId) {
         return userRepository.findByIdAndIsActiveTrue(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Usuario no encontrado: " + userId));
     }
 }
