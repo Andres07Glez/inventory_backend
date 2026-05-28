@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.User;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,10 +19,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     boolean existsByEmployeeNumber(String employeeNumber);
     @Query("""
-        SELECT u FROM User u
-        WHERE LOWER(u.fullName)       LIKE LOWER(CONCAT('%', :term, '%'))
-           OR LOWER(u.username)       LIKE LOWER(CONCAT('%', :term, '%'))
-           OR LOWER(u.employeeNumber) LIKE LOWER(CONCAT('%', :term, '%'))
-        """)
-    Page<User> findBySearchTerm(@Param("term") String term, Pageable pageable);
+    SELECT u FROM User u
+    WHERE (:search IS NULL
+           OR LOWER(u.fullName)       LIKE LOWER(CONCAT('%', :search, '%'))
+           OR LOWER(u.username)       LIKE LOWER(CONCAT('%', :search, '%'))
+           OR LOWER(u.email)          LIKE LOWER(CONCAT('%', :search, '%'))
+           OR u.employeeNumber        LIKE CONCAT('%', :search, '%'))
+    AND   (:role     IS NULL OR u.role     = :role)
+    AND   (:isActive IS NULL OR u.isActive = :isActive)
+    """)
+    Page<User> findWithFilters(
+            @Param("search")   String  search,
+            @Param("role") UserRole role,
+            @Param("isActive") Boolean isActive,
+            Pageable pageable
+    );
 }
