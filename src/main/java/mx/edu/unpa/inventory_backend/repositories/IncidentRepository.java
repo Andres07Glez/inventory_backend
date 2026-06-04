@@ -91,4 +91,5 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
             ORDER BY i.createdAt DESC
             """)
     List<Incident> findAllByAssetId(@Param("assetId") Long assetId);
+    long countByStatus(IncidentStatus status);
 }

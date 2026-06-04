@@ -357,29 +357,3 @@ CREATE TABLE maintenance_logs (
   COMMENT = 'Bitacora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantia).';
 
 SET FOREIGN_KEY_CHECKS = 1;
-
--- ============================================================
--- DATOS INICIALES (SEED)
--- ============================================================
-
-INSERT INTO categories (name, description, parent_id) VALUES
-                                                          ('Bienes Muebles',        'Mobiliario en general',                    NULL),
-                                                          ('Equipo de Cómputo',     'Computadoras y componentes tecnológicos',   NULL),
-                                                          ('Licencias de Software', 'Licencias físicas y electrónicas',          NULL),
-                                                          ('Climatización',         'Aires acondicionados y equipo de clima',    NULL),
-                                                          ('Equipo de Laboratorio', 'Instrumental y equipo especializado',       NULL),
-                                                          ('CPUs y Servidores',     'Unidades centrales y servidores',           2),
-                                                          ('Periféricos',           'Mouse, teclado, monitor, impresoras, etc.', 2),
-                                                          ('Laptops',               'Equipos portátiles',                        2);
-
-INSERT INTO brands (name) VALUES
-                              ('Dell'),
-                              ('HP'),
-                              ('Lenovo'),
-                              ('Apple'),
-                              ('Epson'),
-                              ('LG'),
-                              ('Samsung'),
-                              ('Logitech'),
-                              ('Sony'),
-                              ('Cisco');

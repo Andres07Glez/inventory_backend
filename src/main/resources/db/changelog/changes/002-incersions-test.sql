@@ -2,6 +2,32 @@
 --changeset equipo:002-incersions-test.sql
 --comment: Registros para desarrollo
 
+-- ============================================================
+-- DATOS INICIALES (SEED)
+-- ============================================================
+
+INSERT INTO categories (name, description, parent_id) VALUES
+                                                          ('Bienes Muebles',        'Mobiliario en general',                    NULL),
+                                                          ('Equipo de Cómputo',     'Computadoras y componentes tecnológicos',   NULL),
+                                                          ('Licencias de Software', 'Licencias físicas y electrónicas',          NULL),
+                                                          ('Climatización',         'Aires acondicionados y equipo de clima',    NULL),
+                                                          ('Equipo de Laboratorio', 'Instrumental y equipo especializado',       NULL),
+                                                          ('CPUs y Servidores',     'Unidades centrales y servidores',           2),
+                                                          ('Periféricos',           'Mouse, teclado, monitor, impresoras, etc.', 2),
+                                                          ('Laptops',               'Equipos portátiles',                        2);
+
+INSERT INTO brands (name) VALUES
+                              ('Dell'),
+                              ('HP'),
+                              ('Lenovo'),
+                              ('Apple'),
+                              ('Epson'),
+                              ('LG'),
+                              ('Samsung'),
+                              ('Logitech'),
+                              ('Sony'),
+                              ('Cisco');
+
 INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
                                                                                          ('admin_karen', 'karen.jimenez@unpa.edu.mx', '$2a$10$cGgoScHbjEMsVTbcVYd/Vuja8kG2WDFp980EXiaDR1XNtLUE0EKn.', 'Karen Jimenez Rendon', 'EMP-001', 'ADMIN'),
                                                                                          ('operador1', 'operador@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Juan Pérez', 'EMP-002', 'OPERADOR');
