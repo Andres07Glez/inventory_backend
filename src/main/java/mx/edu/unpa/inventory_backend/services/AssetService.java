@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 public interface AssetService {
     /**
      * Registra un nuevo bien en el inventario.
@@ -23,7 +25,8 @@ public interface AssetService {
      */
     AssetResponseDTO registerAsset(AssetRequestDTO request, Long userId);
 
-    Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, Pageable pageable);
+    Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, LocalDate startDate,
+                                           LocalDate endDate, Pageable pageable);
 
     @Transactional
     UpdateConditionResponse updateCondition(Long assetId, UpdateConditionRequest request, Long updatedBy);

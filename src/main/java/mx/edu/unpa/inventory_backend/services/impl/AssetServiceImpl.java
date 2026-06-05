@@ -32,6 +32,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -167,11 +169,18 @@ public class AssetServiceImpl implements AssetService {
         return toResponseDTO(saved);
     }
 
-    @Transactional(readOnly = true)
+
     @Override
-    public Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, Pageable pageable) {
-        return assetRepository.findByFilters(condition, lifecycle, pageable)
-                .map(assetMapper::toDto); // Mapeamos cada entidad del Page a DTO automáticamente
+    @Transactional(readOnly = true)
+    public Page<AssetResumeResponse> getAllAssets(
+            ConditionStatus condition,
+            LifecycleStatus lifecycle,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+
+        return assetRepository.findFiltered(condition, lifecycle, startDate, endDate, pageable)
+                .map(assetMapper::toDto);
     }
 
     // ---------------------------------------------------------------
