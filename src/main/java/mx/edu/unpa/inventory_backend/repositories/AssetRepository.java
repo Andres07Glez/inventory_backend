@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +56,21 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             @Param("condition") ConditionStatus condition,
             @Param("lifecycle") LifecycleStatus lifecycle,
             Pageable pageable);
+
+    @Query("""
+            SELECT a FROM Asset a
+            WHERE (:condition IS NULL OR a.conditionStatus = :condition)
+              AND (:lifecycle IS NULL OR a.lifecycleStatus = :lifecycle)
+              AND (CAST(:startDate AS date) IS NULL OR a.entryDate >= :startDate)
+              AND (CAST(:endDate AS date) IS NULL OR a.entryDate <= :endDate)
+            """)
+    Page<Asset> findFiltered(
+            @Param("condition") ConditionStatus condition,
+            @Param("lifecycle") LifecycleStatus lifecycle,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
 
     @Query(value = """
     SELECT DISTINCT new mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO(

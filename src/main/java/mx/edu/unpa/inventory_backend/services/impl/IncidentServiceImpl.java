@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.Asset;
+import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.domains.Incident;
 import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.incident.request.IncidentCloseRequestDTO;
@@ -15,6 +16,7 @@ import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.exceptions.InvalidIncidentStateException;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
+import mx.edu.unpa.inventory_backend.repositories.AssetAssignmentRepository;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.repositories.IncidentRepository;
 import mx.edu.unpa.inventory_backend.repositories.UserRepository;
@@ -34,6 +36,7 @@ import java.io.IOException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,6 +63,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final AssetRepository    assetRepository;
     private final UserRepository     userRepository;
     private final StorageService     storageService;
+    private final AssetAssignmentRepository assetAssignmentRepository;
 
     // ── Crear ─────────────────────────────────────────────────────────────────
 
@@ -135,6 +139,11 @@ public class IncidentServiceImpl implements IncidentService {
         Incident incident = requireIncidentWithDetails(id);
 
         validateTransition(incident.getStatus(), dto.status());
+
+        // Efecto de negocio: al pasar a IN_PROGRESS, el bien entra a mantenimiento
+        if (dto.status() == IncidentStatus.IN_PROGRESS) {
+            returnAssetToInventory(incident.getAsset());
+        }
 
         incident.setStatus(dto.status());
 
@@ -274,5 +283,29 @@ public class IncidentServiceImpl implements IncidentService {
         return userRepository.findByIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuario no encontrado: " + userId));
+    }
+
+    /**
+     * Retira el bien de su resguardante actual y lo marca como IN_MAINTENANCE.
+     *
+     * Edge cases manejados:
+     *  - Bien sin asignación activa: no hay nada que cerrar, solo se actualiza el lifecycle.
+     *  - Bien ya en IN_MAINTENANCE: idempotente, no lanza excepción.
+     */
+    private void returnAssetToInventory(Asset asset) {
+        // Edge case 1 & 3: puede no existir asignación activa (dato limpio o sucio)
+        Optional<AssetAssignment> activeAssignment =
+                assetAssignmentRepository.findActiveByAssetId(asset.getId());
+
+        activeAssignment.ifPresent(assignment -> {
+            assignment.setReturnedAt(LocalDateTime.now());
+            assetAssignmentRepository.save(assignment);
+        });
+
+        // Edge case 2: idempotente — si ya está IN_MAINTENANCE no hace daño volver a setearlo
+        asset.setLifecycleStatus(LifecycleStatus.IN_MAINTENANCE);
+        // El location_id del asset NO se toca; el bien físicamente está en reparación,
+        // no "en ningún lado". Si tu dominio requiere borrar la ubicación, ajusta aquí.
+        assetRepository.save(asset);
     }
 }

@@ -20,6 +20,7 @@ import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResultDTO;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -125,6 +127,7 @@ public class AssetController {
                 .body(ApiResponse.ok(assetService.registerAsset(request, currentUser.id())));
     }
 
+    /*
     @GetMapping
     public ResponseEntity<Page<AssetResumeResponse>> getAssets(
             @RequestParam(required = false) ConditionStatus conditionStatus,
@@ -134,6 +137,27 @@ public class AssetController {
         Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
         return ResponseEntity.ok(assets);
     }
+     */
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<AssetResumeResponse>>> getAllAssets(
+            @RequestParam(required = false) ConditionStatus conditionStatus,
+            @RequestParam(required = false) LifecycleStatus lifecycleStatus,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Pageable pageable) {
+
+        Page<AssetResumeResponse> result = assetService.getAllAssets(
+                conditionStatus,
+                lifecycleStatus,
+                startDate,
+                endDate,
+                pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
     @PatchMapping("/{id}/condition/")
     public ResponseEntity<ApiResponse<UpdateConditionResponse>> updateCondition(
             @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,
