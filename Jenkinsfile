@@ -22,6 +22,14 @@ pipeline {
                 sh './gradlew sonar -Dsonar.host.url=http://sonarqube_server:9000 -Dsonar.token=sqa_e32c67bb4d56e723b8d1ad5fb10aac9db54eadd1'
             }
         }
+        stage('Quality Gate') {
+                    steps {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            // Jenkins se pausa aquí esperando la respuesta del webhook de SonarQube
+                            waitForQualityGate abortPipeline: true
+                        }
+                    }
+                }
     }
 
     post {
