@@ -2,6 +2,8 @@ plugins {
     java
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+    jacoco
+    id("org.sonarqube") version "4.4.1.3373"
 }
 
 group = "mx.edu.unpa"
@@ -54,4 +56,28 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/dtos/**",
+                    "**/domains/**",
+                    "**/exceptions/**",
+                    "**/mappers/**",
+                    "**/config/**"
+                )
+            }
+        })
+    )
+}
+
+sonar {
+    properties {
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml")
+        property("sonar.coverage.exclusions", "**/dtos/**, **/domains/**, **/exceptions/**, **/mappers/**, **/config/**")
+    }
 }
