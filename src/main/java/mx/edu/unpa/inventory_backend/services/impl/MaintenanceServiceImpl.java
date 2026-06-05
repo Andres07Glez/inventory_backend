@@ -153,7 +153,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 log.getConditionBefore(),
                 log.getConditionAfter(),
                 log.getCreatedAt(),
-                log.getCreatedBy().getFullName()
+                log.getCreatedBy().getGuardian().getFullName()
         );
     }
 
@@ -169,7 +169,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 log.getCost(),
                 log.getConditionBefore(),
                 log.getConditionAfter(),
-                log.getCreatedBy().getFullName()
+                log.getCreatedBy().getGuardian().getFullName()
         );
     }
 }

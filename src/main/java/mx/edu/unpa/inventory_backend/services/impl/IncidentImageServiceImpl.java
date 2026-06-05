@@ -115,7 +115,7 @@ public class IncidentImageServiceImpl implements IncidentImageService {
                 storageService.buildPublicUrl(img.getFilePath()),
                 img.getMimeType(),
                 img.getUploadedAt(),
-                img.getUploadedBy().getFullName()
+                img.getUploadedBy().getGuardian().getFullName()
         );
     }
 }

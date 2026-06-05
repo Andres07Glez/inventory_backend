@@ -8,18 +8,23 @@ public record CreateUserRequest(
         @Size(min = 3, max = 50)
         String username,
 
-        @NotBlank(message = "El nombre completo es obligatorio")
-        @Size(max = 150)
+        //@NotBlank(message = "El nombre completo es obligatorio")
+        // Opcional si se proporciona guardianId
+        /*@Size(max = 150)
         String fullName,
 
-        @NotBlank(message = "El correo es obligatorio")
+        //@NotBlank(message = "El correo es obligatorio")
+        // Opcional si se proporciona guardianId
         @Email(message = "Formato de correo inválido")
         String email,
 
-        @NotBlank(message = "El número de empleado es obligatorio")
-        @Pattern(regexp = "^EMP-\\d{3,6}$", message = "Formato esperado: EMP-000") // temporal en desarrollo
-        String employeeNumber,
+        // Opcional si se proporciona guardianId
+        @Pattern(regexp = "^EMP-\\d{3,6}$", message = "Formato esperado: EMP-000")
+        String employeeNumber,*/
 
         @NotNull(message = "El rol es obligatorio")
-        UserRole role
+        UserRole role,
+
+        @NotNull(message = "El ID del guardian es obligatorio")// Nuevo: ID del guardian a vincular (reemplaza fullName, email, employeeNumber)
+        Long guardianId
 ) {}

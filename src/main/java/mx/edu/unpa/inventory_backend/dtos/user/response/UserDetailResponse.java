@@ -1,5 +1,6 @@
 package mx.edu.unpa.inventory_backend.dtos.user.response;
 
+import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import mx.edu.unpa.inventory_backend.enums.UserRole;
 
 import java.time.LocalDateTime;
@@ -14,5 +15,6 @@ public record UserDetailResponse(
         boolean isActive,
         LocalDateTime lastLoginAt,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        GuardianSummary guardian // NUEVO — null si no está vinculado
 ) {}

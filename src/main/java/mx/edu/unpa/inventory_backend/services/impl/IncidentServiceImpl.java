@@ -178,7 +178,7 @@ public class IncidentServiceImpl implements IncidentService {
                         storageService.buildPublicUrl(img.getFilePath()),
                         img.getMimeType(),
                         img.getUploadedAt(),
-                        img.getUploadedBy().getFullName()))
+                        img.getUploadedBy().getGuardian().getFullName()))
                 .toList();
 
         return new IncidentResponseDTO(
@@ -194,9 +194,9 @@ public class IncidentServiceImpl implements IncidentService {
                 i.getIncidentDate(),
                 i.getResolutionNotes(),
                 i.getResolvedAt(),
-                i.getResolvedBy() != null ? i.getResolvedBy().getFullName() : null,
+                i.getResolvedBy() != null ? i.getResolvedBy().getGuardian().getFullName() : null,
                 i.getCreatedAt(),
-                i.getCreatedBy().getFullName(),
+                i.getCreatedBy().getGuardian().getFullName(),
                 imageDTOs
         );
     }
@@ -211,7 +211,7 @@ public class IncidentServiceImpl implements IncidentService {
                 i.getRepairType(),
                 i.getCreatedAt(),
                 i.getIncidentDate(),
-                i.getCreatedBy().getFullName()
+                i.getCreatedBy().getGuardian().getFullName()
         );
     }
 

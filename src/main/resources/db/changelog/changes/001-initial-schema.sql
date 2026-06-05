@@ -5,22 +5,19 @@
 CREATE TABLE users (
                        id              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
                        username        VARCHAR(50)      NOT NULL,
-                       email           VARCHAR(150)     NOT NULL,
                        password_hash   VARCHAR(255)     NOT NULL  COMMENT 'BCrypt hash — nunca texto plano',
-                       full_name       VARCHAR(150)     NOT NULL,
-                       employee_number VARCHAR(30)      NOT NULL      COMMENT 'Numero de empleado institucional',
                        role            ENUM('ADMIN', 'OPERADOR','AUDITOR','GUARDIAN') NOT NULL DEFAULT 'OPERADOR',
+                       guardian_id     BIGINT UNSIGNED  NULL      COMMENT 'FK al resguardante vinculado. NULL solo para cuentas de sistema sin resguardante.',
                        is_active       BOOLEAN          NOT NULL DEFAULT TRUE,
                        last_login_at   TIMESTAMP        NULL,
                        created_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                        PRIMARY KEY (id),
-                       UNIQUE KEY uq_users_username (username),
-                       UNIQUE KEY uq_users_email    (email),
-                       UNIQUE KEY uq_users_employee_number (employee_number)
+                       UNIQUE KEY uq_users_username    (username),
+                       UNIQUE KEY uq_users_guardian_id (guardian_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Usuarios del sistema. Roles: ADMIN acceso total, USER operacion diaria.';
+  COMMENT = 'Usuarios del sistema. Los datos personales (nombre, email, num. empleado) viven en guardians.';
 
 -- ============================================================
 -- MODULO 2: CATALOGOS
@@ -65,7 +62,7 @@ CREATE TABLE guardians (
                            email           VARCHAR(150)    NULL,
                            phone           VARCHAR(25)     NULL,
                            department      VARCHAR(150)    NULL      COMMENT 'Area o departamento',
-                           location_id     INT UNSIGNED    NULL      COMMENT 'Ubicacion base del resguardante. Los bienes asignados heredan esta ubicacion.',
+                           location_id     INT UNSIGNED    NULL      COMMENT 'Ubicacion base del resguardante.',
                            is_active       BOOLEAN         NOT NULL DEFAULT TRUE,
                            created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                            updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -77,6 +74,11 @@ CREATE TABLE guardians (
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Catalogo de resguardantes: personas responsables de los bienes.';
+
+-- FK de users → guardians (se agrega aquí, después de crear guardians)
+ALTER TABLE users
+    ADD CONSTRAINT fk_users_guardian
+        FOREIGN KEY (guardian_id) REFERENCES guardians(id) ON DELETE SET NULL;
 
 -- ------------------------------------------------------------
 CREATE TABLE brands (
@@ -132,52 +134,38 @@ CREATE TABLE invoices (
   COMMENT = 'Facturas de compra que respaldan el ingreso de bienes al inventario.';
 
 -- ============================================================
--- MODULO 3: BIENES PATRIMONIALES (núcleo del sistema)
+-- MODULO 3: BIENES PATRIMONIALES
 -- ============================================================
 
 CREATE TABLE assets (
                         id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-
-    -- Identificadores
                         inventory_number VARCHAR(30)     NOT NULL  COMMENT 'Generado por el sistema: INV-2026-00001',
                         barcode          VARCHAR(100)    NULL      COMMENT 'Codigo de barras institucional para escaneo',
-
-    -- Descripcion
                         description      VARCHAR(500)    NOT NULL,
                         brand_id         INT             NULL      COMMENT 'FK al catálogo de marcas',
                         model            VARCHAR(150)    NULL,
                         serial_number    VARCHAR(200)    NULL      COMMENT 'Aplica para equipo de computo y similares',
                         notes            TEXT            NULL,
-
-    -- Relaciones
                         category_id      INT UNSIGNED    NOT NULL,
                         location_id      INT UNSIGNED    NULL      COMMENT 'NULL si aun no tiene ubicacion asignada',
                         invoice_id       BIGINT UNSIGNED NULL      COMMENT 'Factura que sustenta el bien',
-
-    -- Fechas
                         invoice_date     DATE            NULL      COMMENT 'Fecha de la factura (puede diferir de entry_date)',
                         entry_date       DATE            NOT NULL  COMMENT 'Fecha de entrada fisica al almacen',
-
-    -- Estado (dos dimensiones independientes)
                         condition_status ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL DEFAULT 'GOOD'
-        COMMENT 'Condición física: GOOD=Bueno, REGULAR=Regular, BAD=Malo',
-
+                            COMMENT 'Condición física: GOOD=Bueno, REGULAR=Regular, BAD=Malo',
                         lifecycle_status ENUM(
-        'REGISTERED',
-        'AVAILABLE',
-        'ASSIGNED',
-        'IN_MAINTENANCE',
-        'IN_WARRANTY',
-        'DECOMMISSIONED'
-    ) NOT NULL DEFAULT 'REGISTERED'
-        COMMENT 'Ciclo de vida: REGISTERED, AVAILABLE, ASSIGNED, IN_MAINTENANCE, IN_WARRANTY, DECOMMISSIONED',
-
-    -- Auditoria
+                            'REGISTERED',
+                            'AVAILABLE',
+                            'ASSIGNED',
+                            'IN_MAINTENANCE',
+                            'IN_WARRANTY',
+                            'DECOMMISSIONED'
+                        ) NOT NULL DEFAULT 'REGISTERED'
+                            COMMENT 'Ciclo de vida del bien',
                         created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         created_by       BIGINT UNSIGNED NOT NULL,
                         updated_by       BIGINT UNSIGNED NOT NULL,
-
                         PRIMARY KEY (id),
                         UNIQUE KEY uq_assets_inventory_number (inventory_number),
                         UNIQUE KEY uq_assets_barcode          (barcode),
@@ -188,7 +176,6 @@ CREATE TABLE assets (
                         INDEX idx_assets_lifecycle_status (lifecycle_status),
                         INDEX idx_assets_condition_status (condition_status),
                         INDEX idx_assets_entry_date       (entry_date),
-
                         CONSTRAINT fk_assets_brand      FOREIGN KEY (brand_id)    REFERENCES brands(id)     ON DELETE SET NULL,
                         CONSTRAINT fk_assets_category   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
                         CONSTRAINT fk_assets_location   FOREIGN KEY (location_id) REFERENCES locations(id)  ON DELETE SET NULL,
@@ -197,16 +184,16 @@ CREATE TABLE assets (
                         CONSTRAINT fk_assets_updated_by FOREIGN KEY (updated_by)  REFERENCES users(id)      ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Bienes patrimoniales. El resguardante actual se obtiene desde asset_assignments.';
+  COMMENT = 'Bienes patrimoniales.';
 
 -- ------------------------------------------------------------
 CREATE TABLE asset_images (
                               id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                               asset_id    BIGINT UNSIGNED NOT NULL,
-                              file_path   VARCHAR(500)    NOT NULL  COMMENT 'Ruta relativa al archivo (file system o bucket)',
-                              file_name   VARCHAR(255)    NOT NULL  COMMENT 'Nombre original del archivo',
+                              file_path   VARCHAR(500)    NOT NULL,
+                              file_name   VARCHAR(255)    NOT NULL,
                               mime_type   VARCHAR(100)    NOT NULL DEFAULT 'image/jpeg',
-                              is_primary  BOOLEAN         NOT NULL DEFAULT FALSE COMMENT 'Imagen principal del bien en listados',
+                              is_primary  BOOLEAN         NOT NULL DEFAULT FALSE,
                               uploaded_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                               uploaded_by BIGINT UNSIGNED NOT NULL,
                               PRIMARY KEY (id),
@@ -215,7 +202,7 @@ CREATE TABLE asset_images (
                               CONSTRAINT fk_asset_images_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id)  ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Evidencias fotográficas de los bienes. Solo se guarda la ruta, nunca el binario.';
+  COMMENT = 'Evidencias fotográficas de los bienes.';
 
 -- ============================================================
 -- MODULO 4: ASIGNACIONES
@@ -225,7 +212,7 @@ CREATE TABLE asset_assignments (
                                    id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                                    asset_id    BIGINT UNSIGNED NOT NULL,
                                    guardian_id BIGINT UNSIGNED NOT NULL,
-                                   location_id INT UNSIGNED    NULL      COMMENT 'Ubicación al momento de la asignación',
+                                   location_id INT UNSIGNED    NULL,
                                    assigned_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                    returned_at TIMESTAMP       NULL      COMMENT 'NULL = asignación activa',
                                    assigned_by BIGINT UNSIGNED NOT NULL,
@@ -242,7 +229,7 @@ CREATE TABLE asset_assignments (
                                    CONSTRAINT fk_aa_returned_by FOREIGN KEY (returned_by) REFERENCES users(id)     ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Historial de asignaciones. La fila con returned_at IS NULL es la asignacion vigente.';
+  COMMENT = 'Historial de asignaciones. returned_at IS NULL = asignacion vigente.';
 
 -- ============================================================
 -- MODULO 5: INCIDENCIAS
@@ -251,12 +238,11 @@ CREATE TABLE asset_assignments (
 CREATE TABLE incidents (
                            id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                            asset_id              BIGINT UNSIGNED NOT NULL,
-                           incident_date         DATE            NOT NULL DEFAULT (CURRENT_DATE)
-                               COMMENT 'Fecha en que ocurrió la incidencia (puede ser pasada, mínimo año 2002). Distinta de created_at que es la fecha de registro en el sistema.',
-                           description           TEXT            NOT NULL  COMMENT 'Descripción del problema o falla',
-                           repair_type           ENUM('INTERNAL', 'EXTERNAL') NULL COMMENT 'INTERNAL=Reparación interna, EXTERNAL=Proveedor externo',
+                           incident_date         DATE            NOT NULL DEFAULT (CURRENT_DATE),
+                           description           TEXT            NOT NULL,
+                           repair_type           ENUM('INTERNAL', 'EXTERNAL') NULL,
                            status                ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
-                           condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL COMMENT 'Snapshot de la condición física al momento de reportar',
+                           condition_at_incident ENUM('GOOD', 'REGULAR', 'BAD') NOT NULL,
                            resolution_notes      TEXT            NULL,
                            resolved_at           TIMESTAMP       NULL,
                            resolved_by           BIGINT UNSIGNED NULL,
@@ -271,10 +257,7 @@ CREATE TABLE incidents (
                            CONSTRAINT fk_incidents_resolved_by FOREIGN KEY (resolved_by) REFERENCES users(id)  ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Incidencias reportadas (fallas o danos). La tabla es exclusiva de incidencias.';
-
--- Nota: el folio legible (INC-2026-00001) se construye en Spring Boot así:
---   String folio = "INC-" + Year.now() + "-" + String.format("%05d", incident.getId());
+  COMMENT = 'Incidencias reportadas (fallas o danos).';
 
 -- ------------------------------------------------------------
 CREATE TABLE incident_images (
@@ -291,38 +274,38 @@ CREATE TABLE incident_images (
                                  CONSTRAINT fk_ii_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Imagenes adjuntas a incidencias (evidencia fotografica del problema).';
+  COMMENT = 'Imagenes adjuntas a incidencias.';
 
 -- ============================================================
 -- MODULO 6: BAJAS DE BIENES
 -- ============================================================
 
 CREATE TABLE asset_decommissions (
-                                     id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                                     asset_id                BIGINT UNSIGNED NOT NULL,
-                                     incident_id             BIGINT UNSIGNED NULL COMMENT 'Incidencia de origen. NULL si la baja es directa (no nace de incidencia).',
-                                     justification           TEXT            NOT NULL COMMENT 'Dictamen técnico o justificación administrativa obligatoria',
-                                     document_path           VARCHAR(500)    NULL COMMENT 'Ruta relativa al acta PDF en StorageService',
-                                     decommission_date       DATE            NOT NULL COMMENT 'Fecha oficial en que se formaliza la baja',
-                                     status                  ENUM('PENDING', 'CONFIRMED') NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING=en proceso, CONFIRMED=baja definitiva',
-                                     created_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                     updated_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                     created_by              BIGINT UNSIGNED NOT NULL COMMENT 'Usuario que inicia el proceso de baja',
-                                     confirmed_by            BIGINT UNSIGNED NULL COMMENT 'Usuario ADMIN que confirma y finaliza la baja',
-                                     confirmed_at            TIMESTAMP       NULL,
+                                     id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                     asset_id          BIGINT UNSIGNED NOT NULL,
+                                     incident_id       BIGINT UNSIGNED NULL,
+                                     justification     TEXT            NOT NULL,
+                                     document_path     VARCHAR(500)    NULL,
+                                     decommission_date DATE            NOT NULL,
+                                     status            ENUM('PENDING', 'CONFIRMED') NOT NULL DEFAULT 'PENDING',
+                                     created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                     updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                     created_by        BIGINT UNSIGNED NOT NULL,
+                                     confirmed_by      BIGINT UNSIGNED NULL,
+                                     confirmed_at      TIMESTAMP       NULL,
                                      PRIMARY KEY (id),
-                                     UNIQUE KEY uq_decommissions_asset_id (asset_id),
+                                     UNIQUE KEY uq_decommissions_asset_id    (asset_id),
                                      UNIQUE KEY uq_decommissions_incident_id (incident_id),
                                      INDEX idx_decommissions_asset_id    (asset_id),
                                      INDEX idx_decommissions_status      (status),
                                      INDEX idx_decommissions_incident_id (incident_id),
-                                     CONSTRAINT fk_decomm_asset       FOREIGN KEY (asset_id)     REFERENCES assets(id)     ON DELETE RESTRICT,
-                                     CONSTRAINT fk_decomm_incident    FOREIGN KEY (incident_id)  REFERENCES incidents(id)  ON DELETE SET NULL,
-                                     CONSTRAINT fk_decomm_created_by  FOREIGN KEY (created_by)   REFERENCES users(id)      ON DELETE RESTRICT,
-                                     CONSTRAINT fk_decomm_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id)     ON DELETE SET NULL
+                                     CONSTRAINT fk_decomm_asset        FOREIGN KEY (asset_id)    REFERENCES assets(id)    ON DELETE RESTRICT,
+                                     CONSTRAINT fk_decomm_incident     FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE SET NULL,
+                                     CONSTRAINT fk_decomm_created_by   FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT,
+                                     CONSTRAINT fk_decomm_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id)    ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Registro de bajas definitivas de bienes patrimoniales. Independiente de incidencias.';
+  COMMENT = 'Registro de bajas definitivas de bienes patrimoniales.';
 
 -- ============================================================
 -- MODULO 7: MANTENIMIENTO
@@ -331,29 +314,24 @@ CREATE TABLE asset_decommissions (
 CREATE TABLE maintenance_logs (
                                   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                                   asset_id         BIGINT UNSIGNED NOT NULL,
-                                  incident_id      BIGINT UNSIGNED NULL      COMMENT 'Incidencia de origen (NULL si es mantenimiento preventivo)',
+                                  incident_id      BIGINT UNSIGNED NULL,
                                   maintenance_type ENUM('PREVENTIVE', 'CORRECTIVE', 'WARRANTY') NOT NULL,
-                                  description      TEXT            NOT NULL  COMMENT 'Trabajo realizado',
-                                  performed_by     VARCHAR(200)    NULL      COMMENT 'Técnico o empresa responsable',
+                                  description      TEXT            NOT NULL,
+                                  performed_by     VARCHAR(200)    NULL,
                                   performed_date   DATE            NOT NULL,
                                   cost             DECIMAL(10, 2)  NULL,
-                                  condition_before ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condicion antes del servicio',
-                                  condition_after  ENUM('GOOD', 'REGULAR', 'BAD') NULL COMMENT 'Condicion después del servicio',
+                                  condition_before ENUM('GOOD', 'REGULAR', 'BAD') NULL,
+                                  condition_after  ENUM('GOOD', 'REGULAR', 'BAD') NULL,
                                   created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                   created_by       BIGINT UNSIGNED NOT NULL,
                                   PRIMARY KEY (id),
                                   INDEX idx_maintenance_asset_id       (asset_id),
                                   INDEX idx_maintenance_performed_date (performed_date),
-                                  CONSTRAINT fk_ml_asset
-                                      FOREIGN KEY (asset_id)    REFERENCES assets(id)     ON DELETE RESTRICT,
-
-                                  CONSTRAINT fk_ml_incident
-                                      FOREIGN KEY (incident_id) REFERENCES incidents(id)  ON DELETE SET NULL,
-
-                                  CONSTRAINT fk_ml_created_by
-                                      FOREIGN KEY (created_by)  REFERENCES users(id)      ON DELETE RESTRICT
+                                  CONSTRAINT fk_ml_asset      FOREIGN KEY (asset_id)    REFERENCES assets(id)    ON DELETE RESTRICT,
+                                  CONSTRAINT fk_ml_incident   FOREIGN KEY (incident_id) REFERENCES incidents(id) ON DELETE SET NULL,
+                                  CONSTRAINT fk_ml_created_by FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COMMENT = 'Bitacora de mantenimiento y reparaciones por bien (preventivo, correctivo, garantia).';
+  COMMENT = 'Bitacora de mantenimiento y reparaciones por bien.';
 
 SET FOREIGN_KEY_CHECKS = 1;

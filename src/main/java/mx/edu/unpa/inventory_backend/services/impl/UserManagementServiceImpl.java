@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import mx.edu.unpa.inventory_backend.domains.Guardian;
 import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
@@ -9,6 +10,7 @@ import mx.edu.unpa.inventory_backend.dtos.user.response.UserSummaryResponse;
 import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.UserMapper;
+import mx.edu.unpa.inventory_backend.repositories.GuardianRepository;
 import mx.edu.unpa.inventory_backend.repositories.UserRepository;
 import mx.edu.unpa.inventory_backend.services.UserManagementService;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final GuardianRepository guardianRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,18 +47,29 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     @Transactional
     public UserDetailResponse create(CreateUserRequest request) {
-        validateUniqueness(request);
 
-        // Contraseña inicial = BCrypt(employeeNumber).
-        // AuthServiceImpl detecta mustChangePassword comparando hash vs employeeNumber,
-        // por lo que este usuario verá mustChangePassword=true en su primer login.
+        // Verificar que el guardian existe
+        Guardian guardian = guardianRepository.findById(request.guardianId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resguardante no encontrado con id: " + request.guardianId()));
+
+        // Verificar que el guardian no tenga ya una cuenta de acceso
+        if (userRepository.existsByGuardianId(request.guardianId()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El resguardante ya tiene una cuenta de acceso en el sistema.");
+
+        // Verificar que el username no esté duplicado
+        if (userRepository.existsByUsername(request.username()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El usuario '" + request.username() + "' ya existe.");
+
+        // Contraseña inicial = número de empleado del guardian (BCrypt)
+        // AuthServiceImpl detectará mustChangePassword=true en el primer login
         User newUser = User.builder()
                 .username(request.username())
-                .fullName(request.fullName())
-                .email(request.email())
-                .employeeNumber(request.employeeNumber())
                 .role(request.role())
-                .passwordHash(passwordEncoder.encode(request.employeeNumber()))
+                .guardian(guardian)
+                .passwordHash(passwordEncoder.encode(guardian.getEmployeeNumber()))
                 .build();
 
         return userMapper.toDetail(userRepository.save(newUser));
@@ -82,9 +96,16 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     public UserDetailResponse resetPassword(Long targetUserId) {
         User user = findOrThrow(targetUserId);
-        user.setPasswordHash(passwordEncoder.encode(user.getEmployeeNumber()));
+        user.setPasswordHash(passwordEncoder.encode(user.getGuardian().getEmployeeNumber()));
         return userMapper.toDetail(userRepository.save(user));
     }
+
+    /*@Override
+    public UserDetailResponse resetPassword(Long targetUserId) {
+        User user = findOrThrow(targetUserId);
+        user.setPasswordHash(passwordEncoder.encode(user.getEmployeeNumber()));
+        return userMapper.toDetail(userRepository.save(user));
+    }*/
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -99,7 +120,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
     }
 
-    private void validateUniqueness(CreateUserRequest request) {
+    /*private void validateUniqueness(CreateUserRequest request) {
         if (userRepository.existsByUsername(request.username()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El usuario '" + request.username() + "' ya existe.");
@@ -109,5 +130,5 @@ public class UserManagementServiceImpl implements UserManagementService {
         if (userRepository.existsByEmployeeNumber(request.employeeNumber()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El número de empleado '" + request.employeeNumber() + "' ya existe.");
-    }
+    }*/
 }

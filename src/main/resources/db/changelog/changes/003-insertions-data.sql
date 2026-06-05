@@ -26,43 +26,7 @@ INSERT INTO brands (name) VALUES
                               ('Nissan'), ('Chevrolet'), ('Ford'), ('Nikon'), ('Canon'), ('Shure'), ('Yamaha'), ('Synology'), ('APC'), ('CyberPower');
 
 -- ============================================================
--- 3. USUARIOS (Sumando 28 a los 2 existentes = 30)
--- El hash $2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16 equivale a la contraseña genérica
--- ============================================================
-INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
-                                                                                         ('auditor1', 'aud1@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Carlos Ruiz', 'EMP-003', 'AUDITOR'),
-                                                                                         ('guardian1', 'gua1@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Ana Gómez', 'EMP-004', 'GUARDIAN'),
-                                                                                         ('op_miguel', 'miguel.op@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Miguel Sánchez', 'EMP-005', 'OPERADOR'),
-                                                                                         ('op_luisa', 'luisa.op@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Luisa Méndez', 'EMP-006', 'OPERADOR'),
-                                                                                         ('adm_pedro', 'pedro.adm@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Pedro Castillo', 'EMP-007', 'ADMIN');
--- Generando 23 usuarios más en bloque
-INSERT INTO users (username, email, password_hash, full_name, employee_number, role) VALUES
-                                                                                         ('user08', 'u08@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Ocho', 'EMP-008', 'OPERADOR'),
-                                                                                         ('user09', 'u09@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Nueve', 'EMP-009', 'AUDITOR'),
-                                                                                         ('user10', 'u10@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Diez', 'EMP-010', 'GUARDIAN'),
-                                                                                         ('user11', 'u11@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Once', 'EMP-011', 'OPERADOR'),
-                                                                                         ('user12', 'u12@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Doce', 'EMP-012', 'OPERADOR'),
-                                                                                         ('user13', 'u13@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Trece', 'EMP-013', 'OPERADOR'),
-                                                                                         ('user14', 'u14@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Catorce', 'EMP-014', 'OPERADOR'),
-                                                                                         ('user15', 'u15@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Quince', 'EMP-015', 'OPERADOR'),
-                                                                                         ('user16', 'u16@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Dieciseis', 'EMP-016', 'OPERADOR'),
-                                                                                         ('user17', 'u17@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Diecisiete', 'EMP-017', 'OPERADOR'),
-                                                                                         ('user18', 'u18@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Dieciocho', 'EMP-018', 'OPERADOR'),
-                                                                                         ('user19', 'u19@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Diecinueve', 'EMP-019', 'OPERADOR'),
-                                                                                         ('user20', 'u20@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veinte', 'EMP-020', 'OPERADOR'),
-                                                                                         ('user21', 'u21@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintiuno', 'EMP-021', 'OPERADOR'),
-                                                                                         ('user22', 'u22@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintidos', 'EMP-022', 'OPERADOR'),
-                                                                                         ('user23', 'u23@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintitres', 'EMP-023', 'OPERADOR'),
-                                                                                         ('user24', 'u24@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veinticuatro', 'EMP-024', 'OPERADOR'),
-                                                                                         ('user25', 'u25@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veinticinco', 'EMP-025', 'OPERADOR'),
-                                                                                         ('user26', 'u26@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintiseis', 'EMP-026', 'OPERADOR'),
-                                                                                         ('user27', 'u27@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintisiete', 'EMP-027', 'OPERADOR'),
-                                                                                         ('user28', 'u28@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintiocho', 'EMP-028', 'OPERADOR'),
-                                                                                         ('user29', 'u29@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Veintinueve', 'EMP-029', 'OPERADOR'),
-                                                                                         ('user30', 'u30@unpa.edu.mx', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'Usuario Treinta', 'EMP-030', 'OPERADOR');
-
--- ============================================================
--- 4. UBICACIONES (Sumando 27 a las 3 existentes = 30)
+-- 3. UBICACIONES (Sumando 27 a las 3 existentes = 30)
 -- ============================================================
 INSERT INTO locations (name, building, campus, description) VALUES
                                                                 ('Centro de Datos Principal', 'Edificio SITE', 'Loma Bonita', 'Site de telecomunicaciones central'),
@@ -74,9 +38,7 @@ INSERT INTO locations (name, building, campus, description) VALUES
                                                                 ('Aula Múltiple 3', 'Edificio A', 'Loma Bonita', 'Aulas de tronco común'),
                                                                 ('Cubículo Profesores 1', 'Edificio C', 'Loma Bonita', 'Zootecnia y Veterinaria'),
                                                                 ('Cubículo Profesores 2', 'Edificio C', 'Loma Bonita', 'Sistemas y Mecatrónica'),
-                                                                ('Auditorio Institucional', 'Edificio Central', 'Loma Bonita', 'Eventos y conferencias');
--- Rellenando el resto para llegar a 30
-INSERT INTO locations (name, building, campus, description) VALUES
+                                                                ('Auditorio Institucional', 'Edificio Central', 'Loma Bonita', 'Eventos y conferencias'),
                                                                 ('Sala de Juntas A', 'Edificio Administrativo', 'Loma Bonita', 'Reuniones de rectoría'),
                                                                 ('Laboratorio Quimica 1', 'Edificio Q', 'Loma Bonita', 'Prácticas de química general'),
                                                                 ('Laboratorio Quimica 2', 'Edificio Q', 'Loma Bonita', 'Prácticas de química analítica'),
@@ -96,15 +58,49 @@ INSERT INTO locations (name, building, campus, description) VALUES
                                                                 ('Oficina de Recursos Humanos', 'Edificio Administrativo', 'Loma Bonita', 'Gestión de personal');
 
 -- ============================================================
--- 5. RESGUARDANTES (Sumando 27 a los 3 existentes = 30)
+-- 4. RESGUARDANTES (Sumando 28 a los 5 existentes = 33, suficiente para vincular usuarios)
+-- Nota: los IDs 1-5 ya existen del changeset 002.
+-- Los IDs aquí serán 6 en adelante.
 -- ============================================================
+INSERT INTO guardians (employee_number, full_name, email, department, location_id) VALUES
+                                                                                       ('EMP-003', 'Carlos Ruiz',      'aud1@unpa.edu.mx',       'Auditoría',              4),
+                                                                                       ('EMP-004', 'Ana Gómez',        'gua1@unpa.edu.mx',       'Docencia',               5),
+                                                                                       ('EMP-005', 'Miguel Sánchez',   'miguel.op@unpa.edu.mx',  'Soporte Técnico',        4),
+                                                                                       ('EMP-006', 'Luisa Méndez',     'luisa.op@unpa.edu.mx',   'Soporte Técnico',        4),
+                                                                                       ('EMP-007', 'Pedro Castillo',   'pedro.adm@unpa.edu.mx',  'Administración',         4),
+                                                                                       ('EMP-008', 'Usuario Ocho',     'u08@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-009', 'Usuario Nueve',    'u09@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-010', 'Usuario Diez',     'u10@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-011', 'Usuario Once',     'u11@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-012', 'Usuario Doce',     'u12@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-013', 'Usuario Trece',    'u13@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-014', 'Usuario Catorce',  'u14@unpa.edu.mx',        'Área General',           5),
+                                                                                       ('EMP-015', 'Usuario Quince',   'u15@unpa.edu.mx',        'Área General',           6),
+                                                                                       ('EMP-016', 'Usuario Dieciseis','u16@unpa.edu.mx',        'Área General',           6),
+                                                                                       ('EMP-017', 'Usuario Diecisiete','u17@unpa.edu.mx',       'Área General',           6),
+                                                                                       ('EMP-018', 'Usuario Dieciocho','u18@unpa.edu.mx',        'Área General',           6),
+                                                                                       ('EMP-019', 'Usuario Diecinueve','u19@unpa.edu.mx',       'Área General',           7),
+                                                                                       ('EMP-020', 'Usuario Veinte',   'u20@unpa.edu.mx',        'Área General',           7),
+                                                                                       ('EMP-021', 'Usuario Veintiuno','u21@unpa.edu.mx',        'Área General',           7),
+                                                                                       ('EMP-022', 'Usuario Veintidos','u22@unpa.edu.mx',        'Área General',           7),
+                                                                                       ('EMP-023', 'Usuario Veintitres','u23@unpa.edu.mx',       'Área General',           8),
+                                                                                       ('EMP-024', 'Usuario Veinticuatro','u24@unpa.edu.mx',     'Área General',           8),
+                                                                                       ('EMP-025', 'Usuario Veinticinco','u25@unpa.edu.mx',      'Área General',           8),
+                                                                                       ('EMP-026', 'Usuario Veintiseis','u26@unpa.edu.mx',       'Área General',           8),
+                                                                                       ('EMP-027', 'Usuario Veintisiete','u27@unpa.edu.mx',      'Área General',           9),
+                                                                                       ('EMP-028', 'Usuario Veintiocho','u28@unpa.edu.mx',       'Área General',           9),
+                                                                                       ('EMP-029', 'Usuario Veintinueve','u29@unpa.edu.mx',      'Área General',           9),
+                                                                                       ('EMP-030', 'Usuario Treinta',  'u30@unpa.edu.mx',        'Área General',           9);
+
 INSERT INTO guardians (employee_number, full_name, department, location_id) VALUES
-                                                                                ('DOC-103', 'Ing. Fernando Velez', 'Sistemas Computacionales', 4), ('DOC-104', 'Dra. Carmen Salinas', 'Enfermería', 6),
-                                                                                ('DOC-105', 'M.A. Patricia Aguilar', 'Administración', 14), ('DOC-106', 'Lic. Eduardo Medina', 'Biblioteca', 7),
-                                                                                ('DOC-107', 'Ing. Arturo Vidal', 'Soporte Técnico', 4), ('DOC-108', 'Biol. Sandra López', 'Química', 15),
-                                                                                ('DOC-109', 'Dr. Mario Castañeda', 'Zootecnia', 12), ('DOC-110', 'Ing. Sofía Reyes', 'Mecatrónica', 18);
--- Inserción rápida para completar 30 resguardantes
-INSERT INTO guardians (employee_number, full_name, department, location_id) VALUES
+                                                                                ('DOC-103', 'Ing. Fernando Velez',    'Sistemas Computacionales', 4),
+                                                                                ('DOC-104', 'Dra. Carmen Salinas',    'Enfermería',               6),
+                                                                                ('DOC-105', 'M.A. Patricia Aguilar', 'Administración',           14),
+                                                                                ('DOC-106', 'Lic. Eduardo Medina',   'Biblioteca',               7),
+                                                                                ('DOC-107', 'Ing. Arturo Vidal',     'Soporte Técnico',          4),
+                                                                                ('DOC-108', 'Biol. Sandra López',    'Química',                  15),
+                                                                                ('DOC-109', 'Dr. Mario Castañeda',   'Zootecnia',                12),
+                                                                                ('DOC-110', 'Ing. Sofía Reyes',      'Mecatrónica',              18),
                                                                                 ('DOC-111', 'Resguardante 11', 'Área General', 5), ('DOC-112', 'Resguardante 12', 'Área General', 5),
                                                                                 ('DOC-113', 'Resguardante 13', 'Área General', 5), ('DOC-114', 'Resguardante 14', 'Área General', 5),
                                                                                 ('DOC-115', 'Resguardante 15', 'Área General', 6), ('DOC-116', 'Resguardante 16', 'Área General', 6),
@@ -117,6 +113,48 @@ INSERT INTO guardians (employee_number, full_name, department, location_id) VALU
                                                                                 ('DOC-129', 'Resguardante 29', 'Área General', 10);
 
 -- ============================================================
+-- 5. USUARIOS (28 nuevos vinculados a sus guardians, solo username + password_hash + role + guardian_id)
+-- El hash $2a$10$6OILz... equivale a la contraseña genérica (número de empleado)
+-- guardian_id 6  = Carlos Ruiz    (EMP-003) → AUDITOR
+-- guardian_id 7  = Ana Gómez      (EMP-004) → GUARDIAN
+-- guardian_id 8  = Miguel Sánchez (EMP-005) → OPERADOR
+-- guardian_id 9  = Luisa Méndez   (EMP-006) → OPERADOR
+-- guardian_id 10 = Pedro Castillo (EMP-007) → ADMIN
+-- guardian_id 11..33 = EMP-008..030 → OPERADOR / AUDITOR / GUARDIAN según seed
+-- ============================================================
+INSERT INTO users (username, password_hash, role, guardian_id) VALUES
+                                                                   ('auditor1', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'AUDITOR',  6),
+                                                                   ('guardian1','$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'GUARDIAN', 7),
+                                                                   ('op_miguel','$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 8),
+                                                                   ('op_luisa', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 9),
+                                                                   ('adm_pedro','$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'ADMIN',    10);
+
+INSERT INTO users (username, password_hash, role, guardian_id) VALUES
+                                                                   ('user08', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 11),
+                                                                   ('user09', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'AUDITOR',  12),
+                                                                   ('user10', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'GUARDIAN', 13),
+                                                                   ('user11', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 14),
+                                                                   ('user12', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 15),
+                                                                   ('user13', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 16),
+                                                                   ('user14', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 17),
+                                                                   ('user15', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 18),
+                                                                   ('user16', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 19),
+                                                                   ('user17', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 20),
+                                                                   ('user18', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 21),
+                                                                   ('user19', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 22),
+                                                                   ('user20', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 23),
+                                                                   ('user21', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 24),
+                                                                   ('user22', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 25),
+                                                                   ('user23', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 26),
+                                                                   ('user24', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 27),
+                                                                   ('user25', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 28),
+                                                                   ('user26', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 29),
+                                                                   ('user27', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 30),
+                                                                   ('user28', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 31),
+                                                                   ('user29', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 32),
+                                                                   ('user30', '$2a$10$6OILz/FcaDvshuxRufya1ORKpNp079x4Kp8ZqIyFs6zeLweQJqO16', 'OPERADOR', 33);
+
+-- ============================================================
 -- 6. PROVEEDORES (Sumando 28 a los 2 existentes = 30)
 -- ============================================================
 INSERT INTO suppliers (name, rfc) VALUES
@@ -124,9 +162,7 @@ INSERT INTO suppliers (name, rfc) VALUES
                                       ('Mercado Libre', 'MLI101010QWE'), ('PC en Línea', 'PCL090909RTY'),
                                       ('Cyberpuerta', 'CYB110202UIO'), ('Steren', 'STE800505PAS'),
                                       ('Home Depot', 'HDE990101FGH'), ('OfficeMax', 'OMA920303JKL'),
-                                      ('Distribuidora Médica del Sur', 'DMS880404ZXC'), ('Muebles Dico', 'MDI770707VBN');
--- Generando hasta el 30
-INSERT INTO suppliers (name, rfc) VALUES
+                                      ('Distribuidora Médica del Sur', 'DMS880404ZXC'), ('Muebles Dico', 'MDI770707VBN'),
                                       ('Prov 11 S.A.', 'PRV000000011'), ('Prov 12 S.A.', 'PRV000000012'), ('Prov 13 S.A.', 'PRV000000013'),
                                       ('Prov 14 S.A.', 'PRV000000014'), ('Prov 15 S.A.', 'PRV000000015'), ('Prov 16 S.A.', 'PRV000000016'),
                                       ('Prov 17 S.A.', 'PRV000000017'), ('Prov 18 S.A.', 'PRV000000018'), ('Prov 19 S.A.', 'PRV000000019'),
@@ -139,27 +175,23 @@ INSERT INTO suppliers (name, rfc) VALUES
 -- ============================================================
 INSERT INTO invoices (invoice_number, supplier_id, invoice_date, total_amount, created_by) VALUES
                                                                                                ('F-2025-001', 3, '2025-01-10', 150000.00, 1), ('F-2025-002', 4, '2025-02-15', 34500.20, 1),
-                                                                                               ('F-2025-003', 5, '2025-03-20', 12000.00, 2), ('F-2025-004', 6, '2025-04-05', 8900.50, 2),
-                                                                                               ('F-2025-005', 7, '2025-05-12', 4500.00, 1), ('F-2025-006', 8, '2025-06-18', 21500.00, 1),
+                                                                                               ('F-2025-003', 5, '2025-03-20', 12000.00, 2),  ('F-2025-004', 6, '2025-04-05', 8900.50, 2),
+                                                                                               ('F-2025-005', 7, '2025-05-12', 4500.00, 1),   ('F-2025-006', 8, '2025-06-18', 21500.00, 1),
                                                                                                ('F-2025-007', 9, '2025-07-22', 112000.00, 2), ('F-2025-008', 10, '2025-08-30', 9800.00, 2),
-                                                                                               ('F-2025-009', 11, '2025-09-01', 5400.00, 1), ('F-2025-010', 12, '2025-10-10', 13200.00, 1);
--- Completar las 20 restantes
-INSERT INTO invoices (invoice_number, supplier_id, invoice_date, total_amount, created_by) VALUES
-                                                                                               ('F-2025-011', 13, '2025-10-15', 5000.00, 1), ('F-2025-012', 14, '2025-10-16', 6000.00, 1),
-                                                                                               ('F-2025-013', 15, '2025-10-17', 7000.00, 1), ('F-2025-014', 16, '2025-10-18', 8000.00, 1),
-                                                                                               ('F-2025-015', 17, '2025-10-19', 9000.00, 1), ('F-2025-016', 18, '2025-10-20', 10000.00, 1),
+                                                                                               ('F-2025-009', 11, '2025-09-01', 5400.00, 1),  ('F-2025-010', 12, '2025-10-10', 13200.00, 1),
+                                                                                               ('F-2025-011', 13, '2025-10-15', 5000.00, 1),  ('F-2025-012', 14, '2025-10-16', 6000.00, 1),
+                                                                                               ('F-2025-013', 15, '2025-10-17', 7000.00, 1),  ('F-2025-014', 16, '2025-10-18', 8000.00, 1),
+                                                                                               ('F-2025-015', 17, '2025-10-19', 9000.00, 1),  ('F-2025-016', 18, '2025-10-20', 10000.00, 1),
                                                                                                ('F-2025-017', 19, '2025-10-21', 11000.00, 1), ('F-2025-018', 20, '2025-10-22', 12000.00, 1),
                                                                                                ('F-2025-019', 21, '2025-10-23', 13000.00, 1), ('F-2025-020', 22, '2025-10-24', 14000.00, 1),
                                                                                                ('F-2025-021', 23, '2025-10-25', 15000.00, 1), ('F-2025-022', 24, '2025-10-26', 16000.00, 1),
                                                                                                ('F-2025-023', 25, '2025-10-27', 17000.00, 1), ('F-2025-024', 26, '2025-10-28', 18000.00, 1),
                                                                                                ('F-2025-025', 27, '2025-10-29', 19000.00, 1), ('F-2025-026', 28, '2025-10-30', 20000.00, 1),
                                                                                                ('F-2025-027', 29, '2025-11-01', 21000.00, 1), ('F-2025-028', 30, '2025-11-02', 22000.00, 1),
-                                                                                               ('F-2025-029', 1, '2025-11-03', 23000.00, 1), ('F-2025-030', 2, '2025-11-04', 24000.00, 1);
-
+                                                                                               ('F-2025-029', 1,  '2025-11-03', 23000.00, 1), ('F-2025-030', 2,  '2025-11-04', 24000.00, 1);
 
 -- ============================================================
--- 8. BIENES PATRIMONIALES (Mayor densidad, 50 registros)
--- Se incluyen dispositivos clave para evaluar flujos completos de datos
+-- 8. BIENES PATRIMONIALES (50 registros)
 -- ============================================================
 INSERT INTO assets (inventory_number, description, brand_id, model, serial_number, category_id, location_id, invoice_id, entry_date, lifecycle_status, condition_status, created_by, updated_by) VALUES
                                                                                                                                                                                                      ('INV-2026-00005', 'Smartphone POCO X7 Pro', 12, 'X7 Pro', 'SN-POCO-001', 10, 4, 3, '2026-03-01', 'ASSIGNED', 'GOOD', 1, 1),
@@ -171,10 +203,7 @@ INSERT INTO assets (inventory_number, description, brand_id, model, serial_numbe
                                                                                                                                                                                                      ('INV-2026-00011', 'Access Point Ubiquiti UniFi AC Pro', 17, 'UAP-AC-PRO', 'SN-UBI-111', 15, 6, 7, '2025-05-15', 'ASSIGNED', 'GOOD', 1, 1),
                                                                                                                                                                                                      ('INV-2026-00012', 'Monitor HP Z24n', 2, 'Z24n G3', 'SN-HP-M1', 7, 8, 6, '2025-04-12', 'AVAILABLE', 'GOOD', 1, 1),
                                                                                                                                                                                                      ('INV-2026-00013', 'Silla Ergonómica Herman Miller', NULL, 'Aeron', NULL, 17, 8, 8, '2025-06-01', 'ASSIGNED', 'REGULAR', 1, 1),
-                                                                                                                                                                                                     ('INV-2026-00014', 'Escritorio de Metal en L', NULL, 'ML-200', NULL, 16, 9, 8, '2025-06-01', 'ASSIGNED', 'GOOD', 1, 1);
-
--- Bucle masivo para simular el volumen restante de bienes (Generando del 15 al 54)
-INSERT INTO assets (inventory_number, description, brand_id, model, serial_number, category_id, location_id, invoice_id, entry_date, lifecycle_status, condition_status, created_by, updated_by) VALUES
+                                                                                                                                                                                                     ('INV-2026-00014', 'Escritorio de Metal en L', NULL, 'ML-200', NULL, 16, 9, 8, '2025-06-01', 'ASSIGNED', 'GOOD', 1, 1),
                                                                                                                                                                                                      ('INV-2026-00015', 'Licencia IntelliJ IDEA Ultimate', NULL, '2025', 'LIC-JET-001', 19, NULL, 9, '2025-07-01', 'REGISTERED', 'GOOD', 1, 1),
                                                                                                                                                                                                      ('INV-2026-00016', 'Licencia Windows Server 2022', NULL, 'Standard', 'LIC-WIN-001', 20, NULL, 9, '2025-07-01', 'REGISTERED', 'GOOD', 1, 1),
                                                                                                                                                                                                      ('INV-2026-00017', 'Laptop Asus ROG Strix', 14, 'G15', 'SN-ASU-001', 8, 10, 10, '2025-08-10', 'AVAILABLE', 'GOOD', 1, 1),
@@ -259,9 +288,7 @@ INSERT INTO incidents (asset_id, incident_date, description, repair_type, status
                                                                                                                          (19, '2026-03-02', 'Los cabezales de la impresora están obstruidos, imprime con rayas.', 'INTERNAL', 'IN_PROGRESS', 'REGULAR', 4),
                                                                                                                          (24, '2026-03-03', 'Las baterías del UPS se hincharon y derramaron ácido.', 'EXTERNAL', 'CLOSED', 'BAD', 3),
                                                                                                                          (29, '2026-03-04', 'Pupitre con la paleta de escritura rota.', 'INTERNAL', 'OPEN', 'BAD', 4),
-                                                                                                                         (39, '2026-03-05', 'La pulidora hace corto al presionar el gatillo.', 'INTERNAL', 'IN_PROGRESS', 'BAD', 3);
--- Completar 25 más
-INSERT INTO incidents (asset_id, incident_date, description, repair_type, status, condition_at_incident, created_by) VALUES
+                                                                                                                         (39, '2026-03-05', 'La pulidora hace corto al presionar el gatillo.', 'INTERNAL', 'IN_PROGRESS', 'BAD', 3),
                                                                                                                          (10, '2026-03-06', 'Pantalla parpadea intermitentemente.', 'INTERNAL', 'OPEN', 'REGULAR', 3),
                                                                                                                          (13, '2026-03-07', 'Rodaja izquierda atorada.', 'INTERNAL', 'RESOLVED', 'REGULAR', 4),
                                                                                                                          (28, '2026-03-08', 'Tornillos sueltos en el respaldo.', 'INTERNAL', 'RESOLVED', 'REGULAR', 3),
@@ -289,19 +316,19 @@ INSERT INTO incidents (asset_id, incident_date, description, repair_type, status
                                                                                                                          (6, '2026-03-30', 'Batería se descarga en menos de 2 horas.', 'EXTERNAL', 'OPEN', 'BAD', 3);
 
 -- ============================================================
--- 11. BAJAS (10 registros para simular ciclo de vida final)
+-- 11. BAJAS (10 registros)
 -- ============================================================
 INSERT INTO asset_decommissions (asset_id, incident_id, justification, decommission_date, status, created_by, confirmed_by, confirmed_at) VALUES
                                                                                                                                               (24, 3, 'Daño irreparable en circuitería por derrame de ácido. Dictamen técnico anexo.', '2026-04-01', 'CONFIRMED', 3, 1, '2026-04-05'),
                                                                                                                                               (29, 4, 'Pupitre irrecuperable, paleta rota y estructura metálica oxidada.', '2026-04-02', 'PENDING', 4, NULL, NULL);
--- Simulación de 8 más sin incidencia asociada
+
 INSERT INTO asset_decommissions (asset_id, incident_id, justification, decommission_date, status, created_by) VALUES
                                                                                                                   (45, NULL, 'Obsolescencia tecnológica dictaminada por área usuaria.', '2026-04-10', 'PENDING', 3),
                                                                                                                   (50, NULL, 'Extravío reportado en acta de hechos.', '2026-04-11', 'PENDING', 4),
                                                                                                                   (51, NULL, 'Destrucción por inundación en archivo.', '2026-04-12', 'PENDING', 3),
                                                                                                                   (52, NULL, 'Destrucción por termitas comprobada.', '2026-04-13', 'PENDING', 4),
-                                                                                                                  (2, NULL, 'Monitor estrellado en mudanza interna.', '2026-04-14', 'PENDING', 3),
-                                                                                                                  (3, NULL, 'Mobiliario roto y desmantelado.', '2026-04-15', 'PENDING', 4),
+                                                                                                                  (2,  NULL, 'Monitor estrellado en mudanza interna.', '2026-04-14', 'PENDING', 3),
+                                                                                                                  (3,  NULL, 'Mobiliario roto y desmantelado.', '2026-04-15', 'PENDING', 4),
                                                                                                                   (12, NULL, 'Falla de panel LCD tras años de uso, reparación incosteable.', '2026-04-16', 'PENDING', 3),
                                                                                                                   (17, NULL, 'Equipo dañado por descarga eléctrica severa.', '2026-04-17', 'PENDING', 4);
 
@@ -313,9 +340,7 @@ INSERT INTO maintenance_logs (asset_id, maintenance_type, description, performed
                                                                                                                                                               (33, 'PREVENTIVE', 'Afinación mayor, cambio de bujías, aceite y filtros.', 'Agencia Nissan', '2026-01-10', 4500.00, 'GOOD', 'GOOD', 2),
                                                                                                                                                               (31, 'PREVENTIVE', 'Limpieza de serpentines y filtros de aire.', 'Mantenimiento General', '2026-02-15', 0.00, 'REGULAR', 'GOOD', 1),
                                                                                                                                                               (13, 'CORRECTIVE', 'Cambio de rodaja atascada por acumulación de pelusa.', 'Mantenimiento General', '2026-03-08', 150.00, 'REGULAR', 'GOOD', 2),
-                                                                                                                                                              (37, 'CORRECTIVE', 'Sellado de carcasa exterior por filtración de humedad.', 'Soporte TI', '2026-03-18', 0.00, 'REGULAR', 'GOOD', 1);
--- Completar 25 más
-INSERT INTO maintenance_logs (asset_id, maintenance_type, description, performed_by, performed_date, cost, condition_before, condition_after, created_by) VALUES
+                                                                                                                                                              (37, 'CORRECTIVE', 'Sellado de carcasa exterior por filtración de humedad.', 'Soporte TI', '2026-03-18', 0.00, 'REGULAR', 'GOOD', 1),
                                                                                                                                                               (14, 'CORRECTIVE', 'Ajuste de rieles de gaveta.', 'Mantenimiento General', '2026-03-19', 0.00, 'REGULAR', 'GOOD', 1),
                                                                                                                                                               (23, 'CORRECTIVE', 'Limpieza profunda de ventilador de NAS.', 'Soporte TI', '2026-03-27', 0.00, 'REGULAR', 'GOOD', 2),
                                                                                                                                                               (34, 'CORRECTIVE', 'Cambio de acumulador (batería) del vehículo.', 'Taller Externo', '2026-03-28', 2100.00, 'BAD', 'GOOD', 1),

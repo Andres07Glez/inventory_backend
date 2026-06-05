@@ -168,9 +168,9 @@ public class DecommissionServiceImpl implements DecommissionService {
                 d.getDecommissionDate(),
                 d.getStatus(),
                 d.getCreatedAt(),
-                d.getCreatedBy().getFullName(),
+                d.getCreatedBy().getGuardian().getFullName(),
                 d.getConfirmedAt(),
-                d.getConfirmedBy() != null ? d.getConfirmedBy().getFullName() : null
+                d.getConfirmedBy() != null ? d.getConfirmedBy().getGuardian().getFullName() : null
         );
     }
 
@@ -183,7 +183,7 @@ public class DecommissionServiceImpl implements DecommissionService {
                 d.getStatus(),
                 d.getDecommissionDate(),
                 d.getCreatedAt(),
-                d.getCreatedBy().getFullName(),
+                d.getCreatedBy().getGuardian().getFullName(),
                 d.getIncident() != null
         );
     }
