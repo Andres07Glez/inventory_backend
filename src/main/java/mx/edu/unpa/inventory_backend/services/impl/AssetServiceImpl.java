@@ -196,7 +196,7 @@ public class AssetServiceImpl implements AssetService {
         dto.setConditionStatus(asset.getConditionStatus().name());
         dto.setLifecycleStatus(asset.getLifecycleStatus().name());
         dto.setCreatedAt(asset.getCreatedAt());
-        dto.setCreatedByName(asset.getCreatedBy().getFullName());
+        dto.setCreatedByName(asset.getCreatedBy().getGuardian().getFullName());
         dto.setImageUrls(null);
         return dto;
     }

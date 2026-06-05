@@ -155,7 +155,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 docUrl,             // ← documentUrl (campo nuevo en el DTO)
                 i.getNotes(),
                 i.getCreatedAt(),
-                i.getCreatedBy() != null ? i.getCreatedBy().getFullName() : null
+                i.getCreatedBy() != null ? i.getCreatedBy().getGuardian().getFullName() : null
         );
     }
 }
