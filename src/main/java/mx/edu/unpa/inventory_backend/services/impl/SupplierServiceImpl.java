@@ -33,11 +33,9 @@ public class SupplierServiceImpl implements SupplierService {
         }
 
         // 2. Validar RFC duplicado (si se proporciona)
-        if (request.rfc() != null && !request.rfc().isBlank()) {
-            if (supplierRepository.existsByRfc(request.rfc())) {
+        if (request.rfc() != null && !request.rfc().isBlank() && supplierRepository.existsByRfc(request.rfc())) {
                 throw new DuplicateResourceException(
                         "El RFC '" + request.rfc() + "' ya está registrado con otro proveedor.");
-            }
         }
 
         Supplier supplier = supplierMapper.toEntity(request);

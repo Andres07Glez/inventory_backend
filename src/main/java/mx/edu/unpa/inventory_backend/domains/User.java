@@ -22,8 +22,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    //@Column(unique = true, length = 150)
-    //private String email;
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash; // BCrypt hash
@@ -32,11 +30,6 @@ public class User {
     @JoinColumn(name = "guardian_id", unique = true)
     private Guardian guardian;
 
-    //@Column(name = "full_name", length = 150)
-    //private String fullName;
-
-    //@Column(name = "employee_number", length = 30)
-    //private String employeeNumber; // Número de empleado institucional
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -64,21 +57,7 @@ public class User {
         if (this.role == null) this.role = UserRole.OPERADOR;
     }
 
-    /** Devuelve el nombre real: del guardian si está vinculado, del campo propio si no. */
-    /*@Transient
-    public String getEffectiveFullName() {
-        return guardian != null ? guardian.getFullName() : fullName;
-    }
 
-    @Transient
-    public String getEffectiveEmployeeNumber() {
-        return guardian != null ? guardian.getEmployeeNumber() : employeeNumber;
-    }
-
-    @Transient
-    public String getEffectiveEmail() {
-        return guardian != null ? guardian.getEmail() : email;
-    }*/
 
     @PreUpdate
     protected void onUpdate() {

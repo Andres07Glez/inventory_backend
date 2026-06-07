@@ -4,7 +4,6 @@ import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.domains.Guardian;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
-import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;

@@ -1,6 +1,5 @@
 package mx.edu.unpa.inventory_backend.dtos.incident.response;
 
-import mx.edu.unpa.inventory_backend.enums.ClosureType;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.RepairType;

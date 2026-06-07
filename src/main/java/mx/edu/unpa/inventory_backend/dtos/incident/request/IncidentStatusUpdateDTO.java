@@ -2,7 +2,6 @@ package mx.edu.unpa.inventory_backend.dtos.incident.request;
 
 import jakarta.validation.constraints.NotNull;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
-import mx.edu.unpa.inventory_backend.enums.RepairType;
 
 /**
  * Payload para PATCH /v1/incidents/{id}/status.
