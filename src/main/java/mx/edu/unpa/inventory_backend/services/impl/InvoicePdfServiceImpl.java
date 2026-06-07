@@ -111,7 +111,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
                     "Solo se aceptan archivos PDF (application/pdf).");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "El archivo supera el tamaño máximo permitido de 20 MB.");
         }
     }

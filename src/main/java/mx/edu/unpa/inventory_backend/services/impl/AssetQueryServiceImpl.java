@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
-import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset_assignment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.AssetMapper;
 import mx.edu.unpa.inventory_backend.repositories.AssetAssignmentRepository;

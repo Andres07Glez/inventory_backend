@@ -40,7 +40,6 @@ public class AuthServiceImpl implements AuthService {
 
         // La contrasena generica es igual al número de empleado
         boolean mustChangePassword = passwordEncoder.matches(
-                //user.getEmployeeNumber(), user.getPasswordHash());
                 user.getGuardian().getEmployeeNumber(), user.getPasswordHash());
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);

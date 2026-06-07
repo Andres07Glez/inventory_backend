@@ -32,8 +32,6 @@ public class Asset {
     @Column(nullable = false, length = 500)
     private String description;
 
-    /*@Column(length = 100)
-    private String brand;*/
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;

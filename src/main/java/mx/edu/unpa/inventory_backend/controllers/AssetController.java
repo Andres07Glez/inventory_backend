@@ -12,7 +12,7 @@ import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
-import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset_assignment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
@@ -62,11 +62,6 @@ public class AssetController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Typeahead de bienes para el flujo de creación de incidencias.
-     * Busca sobre: número de inventario, descripción, número de serie y código de barras.
-     * */
-
     @GetMapping("/search/typeahead") // <--- RUTA MODIFICADA PARA EVITAR CONFLICTO
     public ResponseEntity<ApiResponse<List<AssetSearchResultDTO>>> searchTypeahead(
             @RequestParam String q,
@@ -76,8 +71,8 @@ public class AssetController {
             return ResponseEntity.ok(ApiResponse.ok(List.of()));
         }
 
-        int MAX_LIMIT = 30; // Declarado aquí por simplicidad
-        int safeLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
+        int maxLimit = 30; // Declarado aquí por simplicidad
+        int safeLimit = Math.min(Math.max(limit, 1), maxLimit);
 
         List<AssetSearchResultDTO> results =
                 assetRepository.searchActive(q.trim(), safeLimit);
@@ -85,13 +80,6 @@ public class AssetController {
         return ResponseEntity.ok(ApiResponse.ok(results));
     }
 
-
-
-
-    /**
-     * Búsqueda explícita por código de barras.
-     * Útil cuando la UI tiene un campo dedicado para el escáner.
-     */
     @GetMapping("/barcode/{barcode}")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> findByBarcode(
             @PathVariable
@@ -103,10 +91,6 @@ public class AssetController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /**
-     * Búsqueda explícita por número de inventario institucional.
-     * Úsalo cuando el usuario escribe manualmente el número de inventario.
-     */
     @GetMapping("/inventory-number/{inventoryNumber}")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> findByInventoryNumber(
             @PathVariable
@@ -126,18 +110,6 @@ public class AssetController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(assetService.registerAsset(request, currentUser.id())));
     }
-
-    /*
-    @GetMapping
-    public ResponseEntity<Page<AssetResumeResponse>> getAssets(
-            @RequestParam(required = false) ConditionStatus conditionStatus,
-            @RequestParam(required = false) LifecycleStatus lifecycleStatus,
-            Pageable pageable) {
-
-        Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
-        return ResponseEntity.ok(assets);
-    }
-     */
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AssetResumeResponse>>> getAllAssets(
