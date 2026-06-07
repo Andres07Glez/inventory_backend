@@ -22,14 +22,12 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash; // BCrypt hash
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guardian_id", unique = true)
     private Guardian guardian;
-
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

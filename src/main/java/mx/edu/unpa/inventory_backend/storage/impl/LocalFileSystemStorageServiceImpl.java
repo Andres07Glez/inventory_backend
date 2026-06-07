@@ -85,7 +85,7 @@ public class LocalFileSystemStorageServiceImpl implements StorageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El archivo no puede estar vacío");
         }
         String mimeType = file.getContentType();
-        System.out.println(mimeType);
+        log.info(mimeType);
         log.error(mimeType);
         if (mimeType == null || !props.allowedMimeTypes().contains(mimeType)) {
 

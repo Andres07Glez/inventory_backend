@@ -1,16 +1,12 @@
 package mx.edu.unpa.inventory_backend.controllers;
 
 import lombok.RequiredArgsConstructor;
-import mx.edu.unpa.inventory_backend.domains.Brand;
 import mx.edu.unpa.inventory_backend.domains.Category;
-import mx.edu.unpa.inventory_backend.domains.Invoice;
 import mx.edu.unpa.inventory_backend.domains.Location;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.brand.response.BrandResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.invoice.response.InvoiceResponseDTO;
-import mx.edu.unpa.inventory_backend.repositories.BrandRepository;
 import mx.edu.unpa.inventory_backend.repositories.CategoryRepository;
-import mx.edu.unpa.inventory_backend.repositories.InvoiceRepository;
 import mx.edu.unpa.inventory_backend.repositories.LocationRepository;
 import mx.edu.unpa.inventory_backend.services.BrandService;
 import mx.edu.unpa.inventory_backend.services.InvoiceService;
