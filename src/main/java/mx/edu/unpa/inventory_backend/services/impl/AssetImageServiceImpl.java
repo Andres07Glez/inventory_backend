@@ -54,7 +54,7 @@ public class AssetImageServiceImpl implements AssetImageService {
 
         long current = imageRepository.countByAssetId(assetId);
         if (current >= MAX_IMAGES) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
                     "El bien ya tiene el máximo de " + MAX_IMAGES + " imágenes permitidas.");
         }
 
@@ -133,7 +133,7 @@ public class AssetImageServiceImpl implements AssetImageService {
                     "Formato no permitido. Solo se aceptan JPEG, PNG y WEBP.");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "El archivo supera el tamaño máximo de 10 MB.");
         }
     }

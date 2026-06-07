@@ -226,7 +226,7 @@ public class DecommissionServiceImpl implements DecommissionService {
                         "Incidencia no encontrada: " + incidentId));
 
         if (!incident.getAsset().getId().equals(asset.getId())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
                     "La incidencia " + incidentId +
                             " no corresponde al bien " + asset.getInventoryNumber() + ".");
         }
@@ -240,7 +240,7 @@ public class DecommissionServiceImpl implements DecommissionService {
                     "Solo se acepta un archivo PDF como documento de baja.");
         }
         if (file.getSize() > MAX_PDF_SIZE) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "El archivo supera el tamaño máximo de 20 MB.");
         }
     }

@@ -1,7 +1,6 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.*;
 import mx.edu.unpa.inventory_backend.dtos.asset.request.AssetAssignmentRequestDTO;

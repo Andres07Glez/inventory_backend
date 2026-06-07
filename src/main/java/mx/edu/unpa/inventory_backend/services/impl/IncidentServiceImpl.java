@@ -11,7 +11,6 @@ import mx.edu.unpa.inventory_backend.dtos.incident.request.IncidentStatusUpdateD
 import mx.edu.unpa.inventory_backend.dtos.incident.response.IncidentImageResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.incident.response.IncidentResponseDTO;
 import mx.edu.unpa.inventory_backend.dtos.incident.response.IncidentSummaryDTO;
-import mx.edu.unpa.inventory_backend.enums.ClosureType;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.exceptions.InvalidIncidentStateException;
@@ -24,28 +23,19 @@ import mx.edu.unpa.inventory_backend.services.IncidentService;
 import mx.edu.unpa.inventory_backend.storage.StorageService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.io.IOException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * REFACTORIZACIÓN SP-16:
- *   Se eliminó confirmDecommission() y toda su lógica de baja (storage de PDF,
- *   actualización de lifecycle_status, etc.).
- *
  *   La única responsabilidad de este servicio es gestionar el ciclo de vida
  *   de las incidencias: OPEN → IN_PROGRESS → RESOLVED → CLOSED.
  */
@@ -170,9 +160,6 @@ public class IncidentServiceImpl implements IncidentService {
         incident.setResolvedAt(LocalDateTime.now());
         incident.setResolvedBy(closedBy);
 
-        /*if (dto.repairType() != null) {
-            incident.setRepairType(dto.repairType());
-        }*/
 
         return toResponseDTO(incidentRepository.save(incident));
     }

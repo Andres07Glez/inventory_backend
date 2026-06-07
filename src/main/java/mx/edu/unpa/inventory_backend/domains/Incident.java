@@ -2,7 +2,6 @@ package mx.edu.unpa.inventory_backend.domains;
 
 import jakarta.persistence.*;
 import lombok.*;
-import mx.edu.unpa.inventory_backend.enums.ClosureType;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.RepairType;
@@ -15,16 +14,6 @@ import java.util.List;
 
 /**
  * Incidencia reportada sobre un bien patrimonial.
- *
- * REFACTORIZACIÓN SP-16:
- *   Se eliminaron los campos de baja (closureType DECOMMISSION, decommissionJustification,
- *   decommissionDocumentPath) porque la baja es ahora un proceso independiente
- *   gestionado por {@link AssetDecommission}.
- *
- *   Una incidencia sigue pudiendo cerrarse como STANDARD. Si la resolución
- *   requirió una baja del bien, esa baja se registra en AssetDecommission
- *   con una referencia OPCIONAL a esta incidencia.
- *
  * Ciclo de vida:
  *   OPEN → IN_PROGRESS → RESOLVED → CLOSED
  */
@@ -68,9 +57,6 @@ public class Incident {
      * Tipo de cierre. Solo STANDARD desde SP-16.
      * La baja definitiva ya no se gestiona desde una incidencia.
      */
-//    @Enumerated(EnumType.STRING)
-//    @Column(name = "closure_type")
-//    private ClosureType closureType;
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;

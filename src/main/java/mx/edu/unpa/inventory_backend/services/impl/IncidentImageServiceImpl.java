@@ -55,7 +55,7 @@ public class IncidentImageServiceImpl implements IncidentImageService {
 
         long current = imageRepository.countByIncidentId(incidentId);
         if (current >= MAX_IMAGES) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
                     "La incidencia ya tiene el máximo de " + MAX_IMAGES + " imágenes de evidencia.");
         }
 
@@ -98,7 +98,7 @@ public class IncidentImageServiceImpl implements IncidentImageService {
                     "Formato no permitido. Solo se aceptan JPEG, PNG y WEBP.");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "El archivo supera el tamaño máximo de 10 MB.");
         }
     }
