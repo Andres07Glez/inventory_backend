@@ -100,12 +100,6 @@ public class UserManagementServiceImpl implements UserManagementService {
         return userMapper.toDetail(userRepository.save(user));
     }
 
-    /*@Override
-    public UserDetailResponse resetPassword(Long targetUserId) {
-        User user = findOrThrow(targetUserId);
-        user.setPasswordHash(passwordEncoder.encode(user.getEmployeeNumber()));
-        return userMapper.toDetail(userRepository.save(user));
-    }*/
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -116,19 +110,8 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     private void guardSelfModification(Long targetId, Long currentId, String message) {
         if (targetId.equals(currentId)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, message);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, message);
         }
     }
 
-    /*private void validateUniqueness(CreateUserRequest request) {
-        if (userRepository.existsByUsername(request.username()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "El usuario '" + request.username() + "' ya existe.");
-        if (userRepository.existsByEmail(request.email()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "El correo '" + request.email() + "' ya está registrado.");
-        if (userRepository.existsByEmployeeNumber(request.employeeNumber()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "El número de empleado '" + request.employeeNumber() + "' ya existe.");
-    }*/
 }
