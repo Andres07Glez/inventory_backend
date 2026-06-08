@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 
 @Entity
 @Table(name = "locations")
@@ -22,8 +23,9 @@ public class Location {
     @Column(length = 100)
     private String building;
 
-    @Column(length = 100)
-    private String campus;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Campus campus;
 
     @Column(length = 255)
     private String description;

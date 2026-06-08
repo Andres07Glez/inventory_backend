@@ -21,9 +21,9 @@ INSERT INTO brands (name) VALUES
                               ('LG'), ('Samsung'), ('Logitech'), ('Sony'), ('Cisco');
 
 INSERT INTO locations (name, building, campus, description) VALUES
-                                                                ('Laboratorio de Cómputo A', 'Edificio L',              'Loma Bonita', 'Planta Alta, Aula 5'),
-                                                                ('Oficina de Zootecnia',     'Edificio Administrativo', 'Loma Bonita', 'Cubículo 3'),
-                                                                ('Almacén General',          'Bodega Central',          'Loma Bonita', 'Área de recepción de bienes');
+                                                                ('Laboratorio de Cómputo A', 'Edificio L',              'LOMA_BONITA', 'Planta Alta, Aula 5'),
+                                                                ('Oficina de Zootecnia',     'Edificio Administrativo', 'LOMA_BONITA', 'Cubículo 3'),
+                                                                ('Almacén General',          'Bodega Central',          'LOMA_BONITA', 'Área de recepción de bienes');
 
 -- Guardians primero — los usuarios se vinculan a ellos
 INSERT INTO guardians (employee_number, full_name, email, department, location_id) VALUES

@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.dtos.asset.response;
 
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import mx.edu.unpa.inventory_backend.dtos.image.response.AssetImageResponseDTO;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 
@@ -20,7 +21,7 @@ public record AssetDetailResponse(
         String categoryName,
         String locationName,
         String building,
-        String campus,
+        Campus campus,
         ConditionStatus conditionStatus,
         LifecycleStatus lifecycleStatus,
         LocalDate entryDate,

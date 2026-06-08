@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.services;
 
 import mx.edu.unpa.inventory_backend.dtos.location.request.LocationRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.location.response.LocationResponseDTO;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,6 +13,9 @@ public interface LocationService {
 
     /** Retorna la página de ubicaciones activas. */
     Page<LocationResponseDTO> findAllActive(Pageable pageable);
+
+    /** Filtra ubicaciones activas por campus. */
+    Page<LocationResponseDTO> findByCampus(Campus campus, Pageable pageable);
 
     /**
      * Búsqueda por nombre, edificio o campus.
