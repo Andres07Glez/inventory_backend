@@ -1,6 +1,7 @@
 package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Location;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,26 +13,28 @@ import java.util.Optional;
 
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Long> {
-    Optional<Location> findByIdAndIsActiveTrue(Integer id);
 
+    Optional<Location> findByIdAndIsActiveTrue(Integer id);
 
     /** Lista solo las ubicaciones activas, con soporte de paginación. */
     Page<Location> findByIsActiveTrue(Pageable pageable);
 
     /** Verifica existencia por nombre exacto dentro de un mismo campus. */
-    boolean existsByNameAndCampus(String name, String campus);
+    boolean existsByNameAndCampus(String name, Campus campus);
 
     /**
-     * Búsqueda por nombre, edificio o campus.
-     * Se usa en el endpoint /search?q=...
+     * Búsqueda por nombre o edificio (texto libre).
+     * El campus ya es un enum, por lo que no se incluye en LIKE;
+     * el filtro por campus se hace con el endpoint /filter si se necesita.
      */
     @Query("""
             SELECT l FROM Location l
             WHERE l.isActive = true
               AND (LOWER(l.name)     LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(l.building) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(l.campus)   LIKE LOWER(CONCAT('%', :q, '%')))
+                OR LOWER(l.building) LIKE LOWER(CONCAT('%', :q, '%')))
             """)
     Page<Location> searchActive(@Param("q") String q, Pageable pageable);
 
+    /** Lista activas filtradas por campus. */
+    Page<Location> findByIsActiveTrueAndCampus(Campus campus, Pageable pageable);
 }

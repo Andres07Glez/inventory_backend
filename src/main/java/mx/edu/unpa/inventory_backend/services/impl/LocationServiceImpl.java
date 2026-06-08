@@ -1,11 +1,11 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
-
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.Location;
 import mx.edu.unpa.inventory_backend.dtos.location.request.LocationRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.location.response.LocationResponseDTO;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 import mx.edu.unpa.inventory_backend.mappers.LocationMapper;
 import mx.edu.unpa.inventory_backend.repositories.LocationRepository;
 import mx.edu.unpa.inventory_backend.services.LocationService;
@@ -28,8 +28,7 @@ public class LocationServiceImpl implements LocationService {
     public LocationResponseDTO create(LocationRequestDTO request) {
 
         // Valida duplicado por nombre + campus (combinación que debe ser única)
-        if (request.campus() != null
-                && locationRepository.existsByNameAndCampus(request.name(), request.campus())) {
+        if (locationRepository.existsByNameAndCampus(request.name(), request.campus())) {
             throw new IllegalArgumentException(
                     "Ya existe una ubicación con el nombre '"
                             + request.name() + "' en el campus '" + request.campus() + "'"
@@ -49,6 +48,14 @@ public class LocationServiceImpl implements LocationService {
     public Page<LocationResponseDTO> findAllActive(Pageable pageable) {
         return locationRepository
                 .findByIsActiveTrue(pageable)
+                .map(locationMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LocationResponseDTO> findByCampus(Campus campus, Pageable pageable) {
+        return locationRepository
+                .findByIsActiveTrueAndCampus(campus, pageable)
                 .map(locationMapper::toDto);
     }
 
@@ -80,7 +87,6 @@ public class LocationServiceImpl implements LocationService {
                 && !request.campus().equals(location.getCampus());
 
         if ((nameChanged || campusChanged)
-                && request.campus() != null
                 && locationRepository.existsByNameAndCampus(request.name(), request.campus())) {
             throw new IllegalArgumentException(
                     "Ya existe una ubicación con el nombre '"

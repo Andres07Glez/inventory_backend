@@ -1,6 +1,8 @@
 package mx.edu.unpa.inventory_backend.dtos.asset.response;
 
 import lombok.Data;
+import mx.edu.unpa.inventory_backend.enums.Campus;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +22,7 @@ public class AssetResponseDTO {
     // Información detallada de relaciones (No solo el ID)
     private String categoryName;
     private String locationName;
-    private String campus; // Importante para filtros en la UNPA
+    private Campus campus; // Importante para filtros en la UNPA
     private String invoiceNumber;
 
     private LocalDate entryDate;

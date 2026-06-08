@@ -44,7 +44,7 @@ CREATE TABLE locations (
                            id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
                            name        VARCHAR(150) NOT NULL  COMMENT 'Nombre del área o aula',
                            building    VARCHAR(100) NULL      COMMENT 'Edificio o bloque',
-                           campus      VARCHAR(100) NULL      COMMENT 'Campus (Loma Bonita, Tuxtepec, etc.)',
+                           campus      ENUM('LOMA_BONITA', 'TUXTEPEC') NULL COMMENT 'Campus al que pertenece la ubicación',
                            description VARCHAR(255) NULL,
                            is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
                            created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
