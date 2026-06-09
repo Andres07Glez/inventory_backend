@@ -29,7 +29,7 @@ pipeline {
 
         stage('Análisis SonarQube') {
             steps {
-                sh "./gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=${SONAR_TOKEN}"
+                sh './gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=${SONAR_TOKEN}'
             }
         }
 
