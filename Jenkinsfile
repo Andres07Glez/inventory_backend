@@ -22,7 +22,7 @@ pipeline {
         stage('Análisis de Calidad (SonarQube)') {
             steps {
                 // Usamos el nombre del contenedor y el token que acabas de generar
-                sh './gradlew sonar -Dsonar.host.url=http://sonarqube_server:9000 -Dsonar.token=sqa_e32c67bb4d56e723b8d1ad5fb10aac9db54eadd1'
+                sh './gradlew sonar -Dsonar.host.url=http://sonarqube_server:9000 -Dsonar.token=sqa_9b62e7d86c449b50e8387b3c24e5a9665e3bcaf6'
             }
         }
         stage('Quality Gate') {
