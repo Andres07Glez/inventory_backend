@@ -5,7 +5,7 @@ pipeline {
     }
 
     environment {
-        SONAR_TOKEN = credentials('sonarqube-token') // nombre del credential en Jenkins
+        SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     stages {
@@ -18,7 +18,6 @@ pipeline {
         stage('Construir y Probar') {
             steps {
                 sh 'chmod +x ./gradlew'
-                // `build` ya incluye compilación + tests + jacocoTestReport (por el finalizedBy)
                 sh './gradlew clean build jacocoTestReport'
             }
             post {
@@ -30,8 +29,7 @@ pipeline {
 
         stage('Análisis SonarQube') {
             steps {
-                // skipCompile=true: usa los .class del stage anterior, no recompila
-                sh './gradlew sonar -Dsonar.token=$SONAR_TOKEN'
+                sh "./gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=${SONAR_TOKEN}"
             }
         }
 
