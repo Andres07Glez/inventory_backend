@@ -1,7 +1,11 @@
 pipeline {
     agent any
     tools {
-            jdk 'Java17'
+        jdk 'Java17'
+    }
+
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token') // nombre del credential en Jenkins
     }
 
     stages {
@@ -11,33 +15,41 @@ pipeline {
             }
         }
 
-        stage('Construir y Probar (Unit Tests)') {
+        stage('Construir y Probar') {
             steps {
                 sh 'chmod +x ./gradlew'
-                // Compila y genera el reporte XML de JaCoCo
+                // `build` ya incluye compilación + tests + jacocoTestReport (por el finalizedBy)
                 sh './gradlew clean build jacocoTestReport'
+            }
+            post {
+                always {
+                    junit 'build/test-results/test/*.xml'
+                }
             }
         }
 
-        stage('Análisis de Calidad (SonarQube)') {
+        stage('Análisis SonarQube') {
             steps {
-                // Usamos el nombre del contenedor y el token que acabas de generar
-                sh './gradlew sonar -Dsonar.host.url=http://sonarqube_server:9000 -Dsonar.token=sqa_9b62e7d86c449b50e8387b3c24e5a9665e3bcaf6'
+                // skipCompile=true: usa los .class del stage anterior, no recompila
+                sh './gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=$SONAR_TOKEN'
             }
         }
+
         stage('Quality Gate') {
-                    steps {
-                        timeout(time: 5, unit: 'MINUTES') {
-                            // Jenkins se pausa aquí esperando la respuesta del webhook de SonarQube
-                            waitForQualityGate abortPipeline: true
-                        }
-                    }
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
+            }
+        }
     }
 
     post {
-        always {
-            junit 'build/test-results/test/*.xml'
+        success {
+            echo 'Pipeline completado exitosamente.'
+        }
+        failure {
+            echo 'El pipeline falló. Revisar logs.'
         }
     }
 }
