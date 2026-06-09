@@ -17,8 +17,11 @@ import mx.edu.unpa.inventory_backend.services.InvoiceService;
 import mx.edu.unpa.inventory_backend.storage.StorageService; // ← import nuevo
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,11 +31,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
 
+    private static final long   MAX_FILE_SIZE = 20 * 1024 * 1024L; // 20 MB
+    private static final String ALLOWED_MIME  = "application/pdf";
+
     private final InvoiceRepository  invoiceRepository;
     private final AssetRepository    assetRepository;
     private final UserRepository     userRepository;
     private final SupplierRepository supplierRepository;
-    private final StorageService     storageService; // ← dependencia nueva
+    private final StorageService     storageService;
 
     // ── Listar con paginación y búsqueda opcional ─────────────
     @Override
@@ -116,7 +122,63 @@ public class InvoiceServiceImpl implements InvoiceService {
         log.info("Factura eliminada id={}", id);
     }
 
+    // ── Subir PDF ─────────────────────────────────────────────
+    @Override
+    @Transactional
+    public String uploadPdf(Long invoiceId, MultipartFile file, Long uploadedById) {
+
+        // 1. Validar el archivo antes de cualquier operación de almacenamiento
+        validatePdf(file);
+
+        // 2. Verificar que el usuario exista y esté activo
+        userRepository.findByIdAndIsActiveTrue(uploadedById)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Usuario no encontrado o inactivo: " + uploadedById));
+
+        // 3. Obtener la factura
+        Invoice invoice = findOrThrow(invoiceId);
+
+        // 4. Si ya tenía un PDF previo, intentar eliminar el físico.
+        //    StorageService.delete() es idempotente: no lanza si el archivo
+        //    ya no existe, por lo que es seguro llamarlo con cualquier ruta
+        //    (incluidas las antiguas que solo guardaban el nombre del archivo).
+        String previousPath = invoice.getDocumentPath();
+        if (previousPath != null && !previousPath.isBlank()) {
+            storageService.delete(previousPath);
+            log.debug("PDF anterior procesado para factura id={} ruta={}", invoiceId, previousPath);
+        }
+
+        String subDir       = "invoices/" + invoiceId;
+        String relativePath = storageService.store(file, subDir);
+
+        // 6. Persistir la ruta en BD
+        invoice.setDocumentPath(relativePath);
+        invoiceRepository.save(invoice);
+
+        String publicUrl = storageService.buildPublicUrl(relativePath);
+        log.info("PDF subido para factura id={} → {}", invoiceId, relativePath);
+        return publicUrl;
+    }
+
+    // ── Eliminar PDF ──────────────────────────────────────────
+    @Override
+    @Transactional
+    public void deletePdf(Long invoiceId) {
+        Invoice invoice = findOrThrow(invoiceId);
+
+        if (invoice.getDocumentPath() == null || invoice.getDocumentPath().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "La factura no tiene un documento PDF asociado.");
+        }
+
+        storageService.delete(invoice.getDocumentPath());
+        invoice.setDocumentPath(null);
+        invoiceRepository.save(invoice);
+        log.info("PDF eliminado para factura id={}", invoiceId);
+    }
+
     // ── Helpers privados ──────────────────────────────────────
+
     private Invoice findOrThrow(Long id) {
         return invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -127,7 +189,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setInvoiceNumber(request.getInvoiceNumber().trim());
         invoice.setInvoiceDate(request.getInvoiceDate());
         invoice.setTotalAmount(BigDecimal.ZERO);
-        invoice.setDocumentPath(request.getDocumentPath());
+        // documentPath NO se toca aquí: es gestionado exclusivamente por uploadPdf/deletePdf
         invoice.setNotes(request.getNotes());
 
         Supplier supplier = supplierRepository.findById(request.getSupplierId())
@@ -139,7 +201,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     private InvoiceResponseDTO toDTO(Invoice i) {
         Supplier s = i.getSupplier();
 
-        // Construir URL pública solo si la factura tiene documento
         String docUrl = (i.getDocumentPath() != null && !i.getDocumentPath().isBlank())
                 ? storageService.buildPublicUrl(i.getDocumentPath())
                 : null;
@@ -152,10 +213,28 @@ public class InvoiceServiceImpl implements InvoiceService {
                 i.getInvoiceDate(),
                 i.getTotalAmount(),
                 i.getDocumentPath(),
-                docUrl,             // ← documentUrl (campo nuevo en el DTO)
+                docUrl,
                 i.getNotes(),
                 i.getCreatedAt(),
                 i.getCreatedBy() != null ? i.getCreatedBy().getGuardian().getFullName() : null
         );
+    }
+
+    /**
+     * Valida tipo MIME y tamaño del PDF antes de enviarlo al StorageService.
+     */
+    private void validatePdf(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El archivo está vacío.");
+        }
+        if (!ALLOWED_MIME.equals(file.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Solo se aceptan archivos PDF (application/pdf).");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
+                    "El archivo supera el tamaño máximo permitido de 20 MB.");
+        }
     }
 }
