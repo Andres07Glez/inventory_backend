@@ -88,6 +88,7 @@ tasks.jacocoTestReport {
 sonar {
     properties {
         property("sonar.gradle.skipCompile", "true")
+        property("sonar.host.url", "http://sonarqube_server:9000")
         property("sonar.coverage.jacoco.xmlReportPaths",
             "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml")
         property("sonar.coverage.exclusions",

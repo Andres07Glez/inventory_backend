@@ -31,7 +31,7 @@ pipeline {
         stage('Análisis SonarQube') {
             steps {
                 // skipCompile=true: usa los .class del stage anterior, no recompila
-                sh './gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=$SONAR_TOKEN'
+                sh './gradlew sonar -Dsonar.token=$SONAR_TOKEN'
             }
         }
 
