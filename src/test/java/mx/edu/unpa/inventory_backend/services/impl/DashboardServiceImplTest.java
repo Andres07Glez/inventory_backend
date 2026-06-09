@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.services.impl;
 
 import mx.edu.unpa.inventory_backend.dtos.dashboard.response.DashboardStatsResponse;
 import mx.edu.unpa.inventory_backend.dtos.dashboard.response.LocationStatDTO;
+import mx.edu.unpa.inventory_backend.enums.Campus;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.IncidentStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
@@ -207,9 +208,9 @@ class DashboardServiceImplTest {
         // Arrange
         stubAllRepositoriesToZero();
         var topLocations = List.of(
-                new LocationStatDTO("Laboratorio A", "Campus Norte", 10L),
-                new LocationStatDTO("Sala de Cómputo", "Campus Sur",  8L),
-                new LocationStatDTO("Biblioteca",      "Campus Norte",  5L)
+                new LocationStatDTO("Laboratorio A", Campus.LOMA_BONITA, 10L),
+                new LocationStatDTO("Sala de Cómputo", Campus.TUXTEPEC,  8L),
+                new LocationStatDTO("Biblioteca",      Campus.LOMA_BONITA,  5L)
         );
         when(assetRepository.findTopLocationsByAssignedAssets(PageRequest.of(0, 5)))
                 .thenReturn(topLocations);
@@ -272,7 +273,7 @@ class DashboardServiceImplTest {
         when(incidentRepository.countByStatus(IncidentStatus.OPEN)).thenReturn(3L);
         when(maintenanceLogRepository.countByPerformedDateBetween(any(), any())).thenReturn(8L);
         when(assetRepository.findTopLocationsByAssignedAssets(any())).thenReturn(
-                List.of(new LocationStatDTO("Lab A", "Campus Norte", 15L))
+                List.of(new LocationStatDTO("Lab A", Campus.LOMA_BONITA, 15L))
         );
 
         // Act

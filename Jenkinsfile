@@ -1,5 +1,12 @@
 pipeline {
     agent any
+    tools {
+        jdk 'Java17'
+    }
+
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token')
+    }
 
     stages {
         stage('Descargar Código') {
@@ -8,33 +15,39 @@ pipeline {
             }
         }
 
-        stage('Construir y Probar (Unit Tests)') {
+        stage('Construir y Probar') {
             steps {
                 sh 'chmod +x ./gradlew'
-                // Compila y genera el reporte XML de JaCoCo
                 sh './gradlew clean build jacocoTestReport'
+            }
+            post {
+                always {
+                    junit 'build/test-results/test/*.xml'
+                }
             }
         }
 
-        stage('Análisis de Calidad (SonarQube)') {
+        stage('Análisis SonarQube') {
             steps {
-                // Usamos el nombre del contenedor y el token que acabas de generar
-                sh './gradlew sonar -Dsonar.host.url=http://sonarqube_server:9000 -Dsonar.token=sqa_e32c67bb4d56e723b8d1ad5fb10aac9db54eadd1'
+                sh './gradlew sonar -Dsonar.gradle.skipCompile=true -Dsonar.token=${SONAR_TOKEN}'
             }
         }
+
         stage('Quality Gate') {
-                    steps {
-                        timeout(time: 5, unit: 'MINUTES') {
-                            // Jenkins se pausa aquí esperando la respuesta del webhook de SonarQube
-                            waitForQualityGate abortPipeline: true
-                        }
-                    }
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
+            }
+        }
     }
 
     post {
-        always {
-            junit 'build/test-results/test/*.xml'
+        success {
+            echo 'Pipeline completado exitosamente.'
+        }
+        failure {
+            echo 'El pipeline falló. Revisar logs.'
         }
     }
 }
