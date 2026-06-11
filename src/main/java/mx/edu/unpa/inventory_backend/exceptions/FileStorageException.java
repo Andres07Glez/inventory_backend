@@ -8,13 +8,13 @@ package mx.edu.unpa.inventory_backend.exceptions;
  *
  * Manejada por GlobalExceptionHandler → HTTP 500 INTERNAL_SERVER_ERROR.
  */
-public class FileStorageExeption extends RuntimeException {
+public class FileStorageException extends RuntimeException {
 
-    public FileStorageExeption(String message) {
+    public FileStorageException(String message) {
         super(message);
     }
 
-    public FileStorageExeption(String message, Throwable cause) {
+    public FileStorageException(String message, Throwable cause) {
         super(message, cause);
     }
 }

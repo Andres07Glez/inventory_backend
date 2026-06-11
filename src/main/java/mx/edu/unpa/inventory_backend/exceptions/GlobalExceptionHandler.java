@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,9 +12,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import mx.edu.unpa.inventory_backend.exceptions.InvalidIncidentStateException;
-import mx.edu.unpa.inventory_backend.exceptions.FileStorageExeption;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 
 @Slf4j
@@ -57,8 +59,8 @@ public class GlobalExceptionHandler {
     }
 
     /** 500 — Error al almacenar o eliminar un archivo */
-    @ExceptionHandler(FileStorageExeption.class)
-    public ResponseEntity<ApiResponse<Void>> handleFileStorage(FileStorageExeption ex) {
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ApiResponse<Void>> handleFileStorage(FileStorageException ex) {
         log.error("Error de almacenamiento de archivo: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -105,6 +107,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
     }
+    /** 400 — @RequestPart requerido no enviado */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestPartException ex) {
+        String message = "Parámetro requerido ausente: " + ex.getMessage();
+        log.warn(message);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message));
+    }
 
     /** 409 — Recurso duplicado */
     @ExceptionHandler(DuplicateResourceException.class)
@@ -142,11 +153,36 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Ocurrió un error interno. Contacte al administrador."));
     }
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        // Puedes cambiar el "String" por tu clase de respuesta de error estándar (ej. ErrorResponseDTO)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex) {
+        log.warn("Cuerpo de petición inválido: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("El cuerpo de la petición es requerido o el formato JSON es inválido.");
+                .body(ApiResponse.error("El cuerpo de la petición es requerido o el formato JSON es inválido."));
+    }
+    /** 400 — Violación de @Validated en parámetros de método (Spring Boot 3.2+) */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidation(
+            HandlerMethodValidationException ex) {
+        String message = ex.getValueResults()
+                .stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .findFirst()
+                .orElse("Parámetro inválido");
+        log.warn("Violación de constraint en parámetro: {}", message);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message));
+    }
+    /** 400 — Error al convertir parámetros (Ej: un Enum inválido en la URL) */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String paramName = ex.getName();
+        log.warn("Parámetro inválido en la URL: {} = {}", paramName, ex.getValue());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("El valor proporcionado para el parámetro '" + paramName + "' no es válido."));
     }
 }
 

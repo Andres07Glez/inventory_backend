@@ -1,7 +1,6 @@
 package mx.edu.unpa.inventory_backend.services.impl;
 
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import mx.edu.unpa.inventory_backend.domains.Guardian;
 import mx.edu.unpa.inventory_backend.domains.Location;
@@ -107,7 +106,7 @@ public class GuardianServiceImpl implements GuardianService {
 
     private Guardian getOrThrow(Long id) {
         return guardianRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Resguardante no encontrado con id: " + id));
     }
 

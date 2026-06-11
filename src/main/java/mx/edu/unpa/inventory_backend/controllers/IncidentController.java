@@ -25,15 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 
-/**
- * Endpoints disponibles:
- *   GET  /v1/incidents                     → listado paginado con filtros
- *   GET  /v1/assets/{assetId}/incidents    → incidencias de un bien
- *   GET  /v1/incidents/{id}               → detalle
- *   POST /v1/incidents                    → crear incidencia
- *   PATCH /v1/incidents/{id}/status       → avanzar estado (OPEN→IN_PROGRESS→RESOLVED)
- *   POST /v1/incidents/{id}/close         → cerrar (RESOLVED→CLOSED, tipo STANDARD)
- */
+
 @RestController
 @RequiredArgsConstructor
 @Validated
@@ -43,10 +35,7 @@ public class IncidentController {
 
     // ── Consultas ─────────────────────────────────────────────────────────────
 
-    /**
-     * Listado global paginado con filtros opcionales.
-     * GET /v1/incidents?status=OPEN&assetId=5&page=0&size=20
-     */
+
     @GetMapping("/v1/incidents")
     public ResponseEntity<ApiResponse<Page<IncidentSummaryDTO>>> list(
             @RequestParam(required = false) IncidentStatus status,
@@ -59,10 +48,7 @@ public class IncidentController {
                 ApiResponse.ok(incidentService.list(status, assetId, folio, pageable)));
     }
 
-    /**
-     * Incidencias de un bien concreto — sin paginar, para el tab en el detalle.
-     * GET /v1/assets/{assetId}/incidents
-     */
+
     @GetMapping("/v1/assets/{assetId}/incidents")
     public ResponseEntity<ApiResponse<List<IncidentSummaryDTO>>> listByAsset(
             @PathVariable @Positive Long assetId) {
@@ -71,10 +57,7 @@ public class IncidentController {
                 ApiResponse.ok(incidentService.listByAsset(assetId)));
     }
 
-    /**
-     * Detalle completo de una incidencia.
-     * GET /v1/incidents/{id}
-     */
+
     @GetMapping("/v1/incidents/{id}")
     public ResponseEntity<ApiResponse<IncidentResponseDTO>> getById(
             @PathVariable @Positive Long id) {
@@ -84,11 +67,7 @@ public class IncidentController {
 
     // ── Crear ─────────────────────────────────────────────────────────────────
 
-    /**
-     * Abre una nueva incidencia.
-     * El bien se selecciona previamente con GET /v1/assets/search.
-     * POST /v1/incidents
-     */
+
     @PostMapping("/v1/incidents")
     public ResponseEntity<ApiResponse<IncidentResponseDTO>> create(
             @Valid @RequestBody IncidentRequestDTO request,
@@ -100,13 +79,7 @@ public class IncidentController {
 
     // ── Flujo de estados ──────────────────────────────────────────────────────
 
-    /**
-     * Avanza el estado de la incidencia:
-     *   OPEN → IN_PROGRESS
-     *   IN_PROGRESS → RESOLVED
-     *
-     * PATCH /v1/incidents/{id}/status
-     */
+
     @PatchMapping("/v1/incidents/{id}/status")
     public ResponseEntity<ApiResponse<IncidentResponseDTO>> updateStatus(
             @PathVariable @Positive Long id,
@@ -115,15 +88,7 @@ public class IncidentController {
         return ResponseEntity.ok(ApiResponse.ok(incidentService.updateStatus(id, dto)));
     }
 
-    /**
-     * Cierre STANDARD de la incidencia (RESOLVED → CLOSED).
-     * Accesible para ADMIN y OPERADOR.
-     *
-     * Si esta resolución requirió dar de baja el bien, usar:
-     *   POST /v1/decommissions (con incidentId opcional para vincular)
-     *
-     * POST /v1/incidents/{id}/close
-     */
+
     @PostMapping("/v1/incidents/{id}/close")
     public ResponseEntity<ApiResponse<IncidentResponseDTO>> close(
             @PathVariable @Positive Long id,
