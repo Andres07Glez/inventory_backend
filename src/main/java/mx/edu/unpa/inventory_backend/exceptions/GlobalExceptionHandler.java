@@ -2,18 +2,22 @@ package mx.edu.unpa.inventory_backend.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import mx.edu.unpa.inventory_backend.exceptions.InvalidIncidentStateException;
-import mx.edu.unpa.inventory_backend.exceptions.FileStorageExeption;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -148,5 +152,72 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body("El cuerpo de la petición es requerido o el formato JSON es inválido.");
     }
+
+    // ──────────────────────────────────────────────────────────────────────────────
+// PARCHE para GlobalExceptionHandler.java
+//
+// Spring Boot 4 / Spring Framework 7 introdujo HandlerMethodValidationException
+// para violaciones de constraints en @PathVariable y @RequestParam (ej. @Positive).
+// Esta excepción es DISTINTA de ConstraintViolationException y debe ser mapeada
+// explícitamente, o de lo contrario cae en el handler genérico → HTTP 500.
+//
+// También se agrega MissingServletRequestPartException para cuando falta
+// el campo de un multipart/form-data (ej. el campo "file" en el upload).
+//
+// Agregar estos dos handlers DENTRO de GlobalExceptionHandler, junto al resto:
+// ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * 400 — Violación de @Positive / @Min / @Max en @PathVariable o @RequestParam.
+     *
+     * Spring 7 lanza HandlerMethodValidationException en lugar de
+     * ConstraintViolationException cuando las constraints están en parámetros
+     * de métodos de controladores (path variables, request params).
+     * Sin este handler, la excepción llega al catch-all de Exception → HTTP 500.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Object> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+
+        // Usamos getAllErrors() directamente, lo cual es mucho más seguro a nivel de compilación
+        String errorMessage = ex.getAllErrors().stream()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+
+        Map<String, Object> responseBody = Map.of(
+                "success", false,
+                "message", errorMessage
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+    }
+
+    /**
+     * 400 — Parte requerida de un multipart/form-data no encontrada.
+     *
+     * Se lanza cuando @RequestParam("file") MultipartFile recibe una petición
+     * multipart sin el campo esperado (campo ausente o con nombre incorrecto).
+     */
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingPart(
+            org.springframework.web.multipart.support.MissingServletRequestPartException ex) {
+        String message = "Parte requerida ausente: " + ex.getRequestPartName();
+        log.warn(message);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message));
+    }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(
+            org.springframework.web.server.ResponseStatusException ex) {
+        String message = ex.getReason() != null
+                ? ex.getReason()
+                : ex.getMessage();
+        log.warn("ResponseStatusException [{}]: {}", ex.getStatusCode(), message);
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(ApiResponse.error(message));
+    }
+
 }
 

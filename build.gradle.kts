@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.testImplementation
+
 plugins {
     java
     id("org.springframework.boot") version "4.0.5"
@@ -37,6 +39,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
 
+
     // MapStruct + Lombok
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     compileOnly("org.projectlombok:lombok")
@@ -58,6 +61,8 @@ dependencies {
     testAnnotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.h2database:h2")
+    testImplementation("org.springframework.security:spring-security-test")
+
 }
 
 tasks.withType<Test> {
