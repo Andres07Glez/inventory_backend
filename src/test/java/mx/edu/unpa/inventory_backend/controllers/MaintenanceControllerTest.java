@@ -69,7 +69,7 @@ class MaintenanceControllerTest {
     // Se activa cuando un @RequestParam enum recibe un valor inválido
     // (ej. ?type=INVALIDO). El GlobalExceptionHandler de producción no
     // lo cubre aún → caería en 500.
-    // TODO: migrar este handler a GlobalExceptionHandler en producción.
+    // migrar este handler a GlobalExceptionHandler en producción.
     // ================================================================
     @RestControllerAdvice
     static class TestExceptionHandlerExtension {
@@ -471,7 +471,7 @@ class MaintenanceControllerTest {
     }
 
     // ================================================================
-    // GET /v1/maintenance/{id}
+    // GET /v1/maintenance/id
     // ================================================================
 
     @Nested
@@ -560,7 +560,7 @@ class MaintenanceControllerTest {
     }
 
     // ================================================================
-    // DELETE /v1/maintenance/{id}
+    // DELETE /v1/maintenance/id
     // ================================================================
 
     @Nested

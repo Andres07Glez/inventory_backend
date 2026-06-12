@@ -1,7 +1,6 @@
 package mx.edu.unpa.inventory_backend.controllers;
 
 import tools.jackson.databind.ObjectMapper;
-import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
@@ -242,7 +240,7 @@ class UserManagementControllerTest {
     }
 
     // ================================================================== //
-    //  GET /v1/admin/users/{id}
+    //  GET /v1/admin/users/id
     // ================================================================== //
 
     @Nested
@@ -479,7 +477,7 @@ class UserManagementControllerTest {
                     guardianSummary
             );
 
-            when(userManagementService.toggleStatus(eq(2L), eq(ADMIN_ID))).thenReturn(deactivated);
+            when(userManagementService.toggleStatus(2L, ADMIN_ID)).thenReturn(deactivated);
 
             mockMvc.perform(patch("/v1/admin/users/2/status"))
                     .andExpect(status().isOk())
@@ -490,7 +488,7 @@ class UserManagementControllerTest {
         @Test
         @DisplayName("should_return200WithActivatedUser_when_userWasInactive")
         void should_return200WithActivatedUser_when_userWasInactive() throws Exception {
-            when(userManagementService.toggleStatus(eq(2L), eq(ADMIN_ID))).thenReturn(userDetailResponse);
+            when(userManagementService.toggleStatus(2L, ADMIN_ID)).thenReturn(userDetailResponse);
 
             mockMvc.perform(patch("/v1/admin/users/2/status"))
                     .andExpect(status().isOk())
@@ -501,7 +499,7 @@ class UserManagementControllerTest {
         @Test
         @DisplayName("should_return404_when_userToToggleNotFound")
         void should_return404_when_userToToggleNotFound() throws Exception {
-            when(userManagementService.toggleStatus(eq(99L), eq(ADMIN_ID)))
+            when(userManagementService.toggleStatus(99L, ADMIN_ID))
                     .thenThrow(new ResourceNotFoundException("Usuario no encontrado con id: 99"));
 
             mockMvc.perform(patch("/v1/admin/users/99/status"))

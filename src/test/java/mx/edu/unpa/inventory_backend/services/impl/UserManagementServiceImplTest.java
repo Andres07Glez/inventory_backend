@@ -389,7 +389,6 @@ class UserManagementServiceImplTest {
                 () -> userManagementService.updateRole(1L, request, 1L)
         );
 
-        //assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, ex.getStatusCode());
         assertEquals(HttpStatus.UNPROCESSABLE_CONTENT, ex.getStatusCode());
         // No debe llegar a consultar el repo si la guard falla primero
         verify(userRepository, never()).findById(any());
@@ -467,7 +466,6 @@ class UserManagementServiceImplTest {
                 ResponseStatusException.class,
                 () -> userManagementService.toggleStatus(1L, 1L)
         );
-        //assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, ex.getStatusCode());
         assertEquals(HttpStatus.UNPROCESSABLE_CONTENT, ex.getStatusCode());
         verify(userRepository, never()).findById(any());
         verify(userRepository, never()).save(any());

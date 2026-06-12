@@ -5,17 +5,19 @@ import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.server.ResponseStatusException;
+
 
 
 @Slf4j
@@ -160,7 +162,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("El cuerpo de la petición es requerido o el formato JSON es inválido."));
     }
-    /** 400 — Violación de @Validated en parámetros de método (Spring Boot 3.2+) */
+    /** 400 — Violación de @Validated en parámetros */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidation(
             HandlerMethodValidationException ex) {
@@ -184,5 +186,17 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("El valor proporcionado para el parámetro '" + paramName + "' no es válido."));
     }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(ResponseStatusException ex) {
+        String message = ex.getReason() != null
+                ? ex.getReason()
+                : ex.getMessage();
+        log.warn("ResponseStatusException [{}]: {}", ex.getStatusCode(), message);
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(ApiResponse.error(message));
+    }
+
 }
 

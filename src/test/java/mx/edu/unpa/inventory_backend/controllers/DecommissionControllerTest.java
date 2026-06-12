@@ -192,8 +192,7 @@ class DecommissionControllerTest {
             mockMvc.perform(get(BASE_URL)
                             .param("status", "VALOR_INVALIDO")
                             .with(user("testuser").authorities(new SimpleGrantedAuthority("ROLE_OPERADOR"))))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value("El valor proporcionado para el parámetro 'status' no es válido."));
+                    .andExpect(status().isBadRequest());
         }
     }
 

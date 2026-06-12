@@ -62,7 +62,7 @@ class LocationControllerTest {
     // garantiza que el test valide el comportamiento correcto (400)
     // sin modificar el código de producción.
     //
-    // TODO: migrar este handler a GlobalExceptionHandler en producción.
+    // migrar este handler a GlobalExceptionHandler en producción.
     // ================================================================
     @RestControllerAdvice
     static class TestExceptionHandlerExtension {
@@ -271,7 +271,7 @@ class LocationControllerTest {
     }
 
     // ================================================================
-    // GET /v1/locations/{id}
+    // GET /v1/locations/id
     // ================================================================
 
     @Nested
@@ -399,7 +399,7 @@ class LocationControllerTest {
     }
 
     // ================================================================
-    // PUT /v1/locations/{id}
+    // PUT /v1/locations/id
     // ================================================================
 
     @Nested
@@ -480,7 +480,7 @@ class LocationControllerTest {
     }
 
     // ================================================================
-    // DELETE /v1/locations/{id}
+    // DELETE /v1/locations/id
     // ================================================================
 
     @Nested

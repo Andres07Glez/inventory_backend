@@ -6,7 +6,7 @@ import mx.edu.unpa.inventory_backend.dtos.invoice.request.InvoiceRequestDTO;
 import mx.edu.unpa.inventory_backend.dtos.invoice.response.InvoiceResponseDTO;
 import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.exceptions.DuplicateResourceException;
-import mx.edu.unpa.inventory_backend.exceptions.FileStorageExeption;
+import mx.edu.unpa.inventory_backend.exceptions.FileStorageException;
 import mx.edu.unpa.inventory_backend.exceptions.GlobalExceptionHandler;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
@@ -68,7 +68,6 @@ class InvoiceControllerTest {
 
     // ================================================================
     // Handler local — cubre MethodArgumentTypeMismatchException (400).
-    // TODO: migrar a GlobalExceptionHandler en producción.
     // ================================================================
     @RestControllerAdvice
     static class TestExceptionHandlerExtension {
@@ -230,7 +229,7 @@ class InvoiceControllerTest {
     }
 
     // ================================================================
-    // GET /v1/invoices/{id}
+    // GET /v1/invoices/id
     // ================================================================
 
     @Nested
@@ -388,7 +387,7 @@ class InvoiceControllerTest {
     }
 
     // ================================================================
-    // PUT /v1/invoices/{id}
+    // PUT /v1/invoices/id
     // ================================================================
 
     @Nested
@@ -467,7 +466,7 @@ class InvoiceControllerTest {
     }
 
     // ================================================================
-    // DELETE /v1/invoices/{id}
+    // DELETE /v1/invoices/id
     // ================================================================
 
     @Nested
@@ -547,7 +546,7 @@ class InvoiceControllerTest {
         @DisplayName("should_return500_when_fileStorageFailsDuringUpload")
         void should_return500_when_fileStorageFailsDuringUpload() throws Exception {
             when(invoiceService.uploadPdf(eq(1L), any(), eq(1L)))
-                    .thenThrow(new FileStorageExeption("Error al guardar el archivo en disco"));
+                    .thenThrow(new FileStorageException("Error al guardar el archivo en disco"));
 
             MockMultipartFile pdf = new MockMultipartFile(
                     "file", "factura.pdf",
@@ -597,7 +596,7 @@ class InvoiceControllerTest {
         @Test
         @DisplayName("should_return500_when_fileStorageFailsDuringDeletion")
         void should_return500_when_fileStorageFailsDuringDeletion() throws Exception {
-            doThrow(new FileStorageExeption("No se pudo eliminar el archivo del disco"))
+            doThrow(new FileStorageException("No se pudo eliminar el archivo del disco"))
                     .when(invoiceService).deletePdf(1L);
 
             mockMvc.perform(delete("/v1/invoices/1/pdf"))
