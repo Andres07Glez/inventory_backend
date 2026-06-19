@@ -614,7 +614,8 @@ class InvoiceServiceImplTest {
         @DisplayName("should_returnPublicUrl_when_pdfIsValidAndInvoiceExists")
         void should_returnPublicUrl_when_pdfIsValidAndInvoiceExists() {
             // Arrange
-            when(userRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(creator));
+            // CAMBIO: Ahora usamos existsByIdAndIsActiveTrue
+            when(userRepository.existsByIdAndIsActiveTrue(1L)).thenReturn(true);
             when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
             when(storageService.store(validPdf, "invoices/1")).thenReturn("invoices/1/uuid.pdf");
             when(storageService.buildPublicUrl("invoices/1/uuid.pdf"))
@@ -637,7 +638,8 @@ class InvoiceServiceImplTest {
         void should_deleteOldPdf_when_invoiceAlreadyHasDocumentPath() {
             // Arrange
             invoice.setDocumentPath("invoices/1/old.pdf");
-            when(userRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(creator));
+            // CAMBIO: Ahora usamos existsByIdAndIsActiveTrue
+            when(userRepository.existsByIdAndIsActiveTrue(1L)).thenReturn(true);
             when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
             when(storageService.store(any(), any())).thenReturn("invoices/1/new.pdf");
             when(storageService.buildPublicUrl(any())).thenReturn("http://...");
@@ -654,7 +656,8 @@ class InvoiceServiceImplTest {
         @DisplayName("should_notDeleteOldPdf_when_invoiceHasNoDocumentPath")
         void should_notDeleteOldPdf_when_invoiceHasNoDocumentPath() {
             // invoice.documentPath == null en el fixture
-            when(userRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(creator));
+            // CAMBIO: Ahora usamos existsByIdAndIsActiveTrue
+            when(userRepository.existsByIdAndIsActiveTrue(1L)).thenReturn(true);
             when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
             when(storageService.store(any(), any())).thenReturn("invoices/1/new.pdf");
             when(storageService.buildPublicUrl(any())).thenReturn("http://...");
@@ -722,7 +725,8 @@ class InvoiceServiceImplTest {
         @Test
         @DisplayName("should_throwResourceNotFoundException_when_userNotActiveOnUpload")
         void should_throwResourceNotFoundException_when_userNotActiveOnUpload() {
-            when(userRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.empty());
+            // CAMBIO: Retornamos false simulando que no existe/no está activo
+            when(userRepository.existsByIdAndIsActiveTrue(1L)).thenReturn(false);
 
             assertThrows(
                     ResourceNotFoundException.class,
@@ -734,7 +738,8 @@ class InvoiceServiceImplTest {
         @Test
         @DisplayName("should_throwResourceNotFoundException_when_invoiceNotFoundOnUpload")
         void should_throwResourceNotFoundException_when_invoiceNotFoundOnUpload() {
-            when(userRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(creator));
+            // CAMBIO: Ahora usamos existsByIdAndIsActiveTrue
+            when(userRepository.existsByIdAndIsActiveTrue(1L)).thenReturn(true);
             when(invoiceRepository.findById(99L)).thenReturn(Optional.empty());
 
             assertThrows(

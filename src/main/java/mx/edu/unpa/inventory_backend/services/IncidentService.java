@@ -27,8 +27,8 @@ public interface IncidentService {
 
     /**
      * Listado global paginado con filtros opcionales.
-     * @param status  filtra por estado; null = todos
-     * @param assetId filtra por bien;   null = todos
+     * @param status  filtra por estado;
+     * @param assetId filtra por bien;
      */
     Page<IncidentSummaryDTO> list(IncidentStatus status, Long assetId,
                                   String folioQuery, Pageable pageable);

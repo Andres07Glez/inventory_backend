@@ -131,10 +131,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         validatePdf(file);
 
         // 2. Verificar que el usuario exista y esté activo
-        userRepository.findByIdAndIsActiveTrue(uploadedById)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Usuario no encontrado o inactivo: " + uploadedById));
-
+        if (!userRepository.existsByIdAndIsActiveTrue(uploadedById)) {
+            throw new ResourceNotFoundException(
+                    "Usuario no encontrado o inactivo: " + uploadedById);
+        }
         // 3. Obtener la factura
         Invoice invoice = findOrThrow(invoiceId);
 

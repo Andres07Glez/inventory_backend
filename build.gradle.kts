@@ -24,46 +24,51 @@ repositories {
 
 val mapstructVersion = "1.6.3"
 val jjwtVersion = "0.12.6"
+val lombokMapstructBindingVersion = "0.2.0"
 
 dependencies {
-    // Core
+    // --- DESTINO: IMPLEMENTATION (Producción / Core) ---
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
-    implementation("org.yaml:snakeyaml")
-
-    // Security + JWT
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.yaml:snakeyaml")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
+    // --- DESTINO: COMPILE ONLY ---
+    compileOnly("org.projectlombok:lombok")
+
+    // --- DESTINO: RUNTIME / DEVELOPMENT ONLY ---
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
 
-
-    // MapStruct + Lombok
-    implementation("org.mapstruct:mapstruct:$mapstructVersion")
-    compileOnly("org.projectlombok:lombok")
+    // --- DESTINO: ANNOTATION PROCESSORS ---
     annotationProcessor("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:$lombokMapstructBindingVersion")
     annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
-    // Dev
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
-
-    // Test
+    // --- DESTINO: TEST IMPLEMENTATION ---
     testImplementation("org.springframework.boot:spring-boot-starter-liquibase-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.security:spring-security-test")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
+    // --- DESTINO: TEST COMPILE ONLY ---
     testCompileOnly("org.projectlombok:lombok")
-    testAnnotationProcessor("org.projectlombok:lombok")
-    testAnnotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
-    testAnnotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
+
+    // --- DESTINO: TEST RUNTIME ONLY ---
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.h2database:h2")
-    testImplementation("org.springframework.security:spring-security-test")
+
+    // --- DESTINO: TEST ANNOTATION PROCESSORS ---
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok-mapstruct-binding:$lombokMapstructBindingVersion")
+    testAnnotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
 }
 

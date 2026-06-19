@@ -43,7 +43,6 @@ public interface DecommissionService {
     /**
      * Listado paginado con filtro opcional por estado.
      *
-     * @param status  filtra por estado; null = todos
      */
     Page<DecommissionSummaryDTO> list(DecommissionStatus status, Pageable pageable);
 
