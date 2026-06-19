@@ -19,7 +19,7 @@ public interface MaintenanceService {
     MaintenanceResponse create(MaintenanceCreateRequest request, Long createdById);
 
     /**
-     * Lista todos los mantenimientos de un bien específico, ordenados por fecha desc.
+     * Lista los mantenimientos de un bien específico, ordenados por fecha desc.
      *
      * @param assetId ID del bien
      * @return lista de resúmenes
@@ -29,7 +29,7 @@ public interface MaintenanceService {
     /**
      * Lista global con filtro opcional por tipo.
      *
-     * @param type filtro de tipo; null para traer todos
+     * @param type filtro de tipo; 
      * @return lista de resúmenes
      */
     List<MaintenanceSummary> getAll(MaintenanceType type);
