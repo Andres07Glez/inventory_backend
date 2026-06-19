@@ -1,4 +1,4 @@
-package mx.edu.unpa.inventory_backend.dtos.assetAssigment.response;
+package mx.edu.unpa.inventory_backend.dtos.asset_assignment.response;
 
 import java.time.LocalDateTime;
 

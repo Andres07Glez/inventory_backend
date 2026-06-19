@@ -7,6 +7,7 @@ public record DashboardStatsResponse(
         long totalAssets,       // bienes no dados de baja
         long availableAssets,   // lifecycle = AVAILABLE
         long assignedAssets,    // lifecycle = ASSIGNED
+        long inMaintenanceAssets,
 
         // ── Distribución por condición (donut chart) ──────────────────────────
         long goodCondition,

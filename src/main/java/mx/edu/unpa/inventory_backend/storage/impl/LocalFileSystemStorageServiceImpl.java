@@ -86,8 +86,9 @@ public class LocalFileSystemStorageServiceImpl implements StorageService {
         }
         String mimeType = file.getContentType();
         if (mimeType == null || !props.allowedMimeTypes().contains(mimeType)) {
+
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    "Tipo de archivo no permitido. Usa JPEG, PNG o WebP.");
+                    "Tipo de archivo no permitido");
         }
     }
 

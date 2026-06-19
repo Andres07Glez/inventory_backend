@@ -12,13 +12,15 @@ import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetResumeResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse;
-import mx.edu.unpa.inventory_backend.dtos.assetAssigment.response.AssignmentHistoryResponse;
+import mx.edu.unpa.inventory_backend.dtos.asset_assignment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import mx.edu.unpa.inventory_backend.services.AssetService;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResultDTO;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -59,10 +62,24 @@ public class AssetController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Búsqueda explícita por código de barras.
-     * Útil cuando la UI tiene un campo dedicado para el escáner.
-     */
+    @GetMapping("/search/typeahead") // <--- RUTA MODIFICADA PARA EVITAR CONFLICTO
+    public ResponseEntity<ApiResponse<List<AssetSearchResultDTO>>> searchTypeahead(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        if (q == null || q.trim().length() < 2) {
+            return ResponseEntity.ok(ApiResponse.ok(List.of()));
+        }
+
+        int maxLimit = 30; // Declarado aquí por simplicidad
+        int safeLimit = Math.min(Math.max(limit, 1), maxLimit);
+
+        List<AssetSearchResultDTO> results =
+                assetRepository.searchActive(q.trim(), safeLimit);
+
+        return ResponseEntity.ok(ApiResponse.ok(results));
+    }
+
     @GetMapping("/barcode/{barcode}")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> findByBarcode(
             @PathVariable
@@ -74,10 +91,6 @@ public class AssetController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /**
-     * Búsqueda explícita por número de inventario institucional.
-     * Úsalo cuando el usuario escribe manualmente el número de inventario.
-     */
     @GetMapping("/inventory-number/{inventoryNumber}")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> findByInventoryNumber(
             @PathVariable
@@ -99,14 +112,24 @@ public class AssetController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<AssetResumeResponse>> getAssets(
+    public ResponseEntity<ApiResponse<Page<AssetResumeResponse>>> getAllAssets(
             @RequestParam(required = false) ConditionStatus conditionStatus,
             @RequestParam(required = false) LifecycleStatus lifecycleStatus,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable) {
 
-        Page<AssetResumeResponse> assets = assetService.getAllAssets(conditionStatus, lifecycleStatus, pageable);
-        return ResponseEntity.ok(assets);
+        Page<AssetResumeResponse> result = assetService.getAllAssets(
+                conditionStatus,
+                lifecycleStatus,
+                startDate,
+                endDate,
+                pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
+
     @PatchMapping("/{id}/condition/")
     public ResponseEntity<ApiResponse<UpdateConditionResponse>> updateCondition(
             @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,

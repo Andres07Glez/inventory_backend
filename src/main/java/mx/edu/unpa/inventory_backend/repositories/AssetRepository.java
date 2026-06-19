@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.repositories;
 
 import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.Brand;
+import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResultDTO;
 import mx.edu.unpa.inventory_backend.dtos.dashboard.response.LocationStatDTO;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +56,21 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
             @Param("condition") ConditionStatus condition,
             @Param("lifecycle") LifecycleStatus lifecycle,
             Pageable pageable);
+
+    @Query("""
+            SELECT a FROM Asset a
+            WHERE (:condition IS NULL OR a.conditionStatus = :condition)
+              AND (:lifecycle IS NULL OR a.lifecycleStatus = :lifecycle)
+              AND (CAST(:startDate AS date) IS NULL OR a.entryDate >= :startDate)
+              AND (CAST(:endDate AS date) IS NULL OR a.entryDate <= :endDate)
+            """)
+    Page<Asset> findFiltered(
+            @Param("condition") ConditionStatus condition,
+            @Param("lifecycle") LifecycleStatus lifecycle,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
 
     @Query(value = """
     SELECT DISTINCT new mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResponseDTO(
@@ -129,4 +146,46 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     AND SUBSTRING_INDEX(SUBSTRING_INDEX(inventory_number, '-', 2), '-', -1) = :year
     """, nativeQuery = true)
     Long getNextSequence(@Param("year") int year);
+
+    /**
+     * Typeahead dinámico. Excluye bienes DECOMMISSIONED.
+     * Usado por: módulo de Incidencias y módulo de Bajas.
+     *
+     * Edge case: si :q llega vacío, devuelve los primeros :limit bienes
+     * activos ordenados por número de inventario (comportamiento esperado
+     * para un campo de búsqueda recién enfocado).
+     */
+    @Query("""
+            SELECT new mx.edu.unpa.inventory_backend.dtos.asset.response.AssetSearchResultDTO(
+                a.id,
+                a.inventoryNumber,
+                a.description,
+                COALESCE(b.name, ''),
+                COALESCE(a.model, ''),
+                COALESCE(a.serialNumber, ''),
+                a.conditionStatus,
+                a.lifecycleStatus,
+                c.name,
+                COALESCE(l.name, '')
+            )
+            FROM Asset a
+            LEFT JOIN a.brand b
+            JOIN a.category c
+            LEFT JOIN a.location l
+            WHERE a.lifecycleStatus <> mx.edu.unpa.inventory_backend.enums.LifecycleStatus.DECOMMISSIONED
+              AND (
+                  LOWER(a.inventoryNumber) LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(a.description)     LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(a.serialNumber)    LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(a.barcode)         LIKE LOWER(CONCAT('%', :q, '%'))
+              )
+            ORDER BY
+                CASE WHEN LOWER(a.inventoryNumber) LIKE LOWER(CONCAT(:q, '%')) THEN 0 ELSE 1 END,
+                a.inventoryNumber ASC
+            LIMIT :limit
+            """)
+    List<AssetSearchResultDTO> searchActive(
+            @Param("q") String q,
+            @Param("limit") int limit);
+
 }

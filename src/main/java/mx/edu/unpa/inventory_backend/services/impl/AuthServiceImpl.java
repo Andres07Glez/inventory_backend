@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmployeeNumber(request.employeeNumber())
+        User user = userRepository.findByGuardianEmployeeNumber(request.employeeNumber())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
 
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
         // La contrasena generica es igual al número de empleado
         boolean mustChangePassword = passwordEncoder.matches(
-                user.getEmployeeNumber(), user.getPasswordHash());
+                user.getGuardian().getEmployeeNumber(), user.getPasswordHash());
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtService.generateToken(principal);
         return AuthResponse.of(token, principal.id(), principal.getUsername(),
-                user.getFullName(), principal.role(), mustChangePassword);
+                user.getGuardian().getFullName(), principal.role(), mustChangePassword);
     }
 
     @Override

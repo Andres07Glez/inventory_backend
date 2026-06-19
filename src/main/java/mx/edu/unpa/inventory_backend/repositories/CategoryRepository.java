@@ -23,12 +23,18 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
      * Búsqueda por nombre (solo activas).
      */
     @Query("""
-            SELECT c FROM Category c
-            WHERE c.isActive = true
-              AND LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
-            """)
+    SELECT DISTINCT c FROM Category c
+    WHERE c.isActive = true
+      AND (
+          LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
+          OR c.id IN (
+              SELECT sub.parent.id FROM Category sub
+              WHERE sub.isActive = true
+                AND LOWER(sub.name) LIKE LOWER(CONCAT('%', :q, '%'))
+          )
+      )
+    """)
     Page<Category> searchActive(@Param("q") String q, Pageable pageable);
-
     /**
      * Lista todas las categorías raíz activas (sin padre), para construir árbol en el frontend.
      */

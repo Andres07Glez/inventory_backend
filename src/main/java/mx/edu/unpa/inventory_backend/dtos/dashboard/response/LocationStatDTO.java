@@ -1,7 +1,9 @@
 package mx.edu.unpa.inventory_backend.dtos.dashboard.response;
 
+import mx.edu.unpa.inventory_backend.enums.Campus;
+
 public record LocationStatDTO(
         String locationName,
-        String campus,
+        Campus campus,
         Long   assetCount
 ) {}

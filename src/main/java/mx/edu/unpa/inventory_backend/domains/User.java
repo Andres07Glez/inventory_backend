@@ -22,17 +22,12 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 150)
-    private String email;
-
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash; // BCrypt hash
 
-    @Column(name = "full_name", nullable = false, length = 150)
-    private String fullName;
-
-    @Column(name = "employee_number", length = 30)
-    private String employeeNumber; // Número de empleado institucional
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guardian_id", unique = true)
+    private Guardian guardian;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -59,6 +54,8 @@ public class User {
         if (this.isActive == null) this.isActive = true;
         if (this.role == null) this.role = UserRole.OPERADOR;
     }
+
+
 
     @PreUpdate
     protected void onUpdate() {

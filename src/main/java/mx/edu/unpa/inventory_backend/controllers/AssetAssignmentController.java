@@ -18,12 +18,16 @@ public class AssetAssignmentController {
 
     private final AssetAssignmentService assignmentService;
 
+    // En el controller, extrae el principal desde el Authentication directamente
     @PostMapping
     public ResponseEntity<AssetAssignmentResponseDTO> createAssignment(
             @Valid @RequestBody AssetAssignmentRequestDTO request,
             @AuthenticationPrincipal AuthenticatedUser currentUser) {
 
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(assignmentService.assignAsset(request, currentUser.id()));
     }
-}
+    }
+
+

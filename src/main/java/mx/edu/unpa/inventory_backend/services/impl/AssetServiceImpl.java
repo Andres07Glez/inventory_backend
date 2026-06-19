@@ -32,6 +32,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -63,63 +67,21 @@ public class AssetServiceImpl implements AssetService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoría no encontrada o inactiva: " + request.getCategoryId()));
 
-        // 3. Validar ubicación activa (opcional al registrar)
-        Location location = null;
-        if (request.getLocationId() != null) {
-            location = locationRepository.findByIdAndIsActiveTrue(request.getLocationId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Ubicación no encontrada o inactiva: " + request.getLocationId()));
-        }
+        // 3. Resolver entidades opcionales
+        Location location = resolveLocation(request.getLocationId());
+        Invoice invoice   = resolveInvoice(request.getInvoiceId());
+        Brand brand       = resolveBrand(request.getBrandId());
 
-        // 3.5 Resolver factura (opcional)
-        Invoice invoice = null;
-        if (request.getInvoiceId() != null) {
-            invoice = invoiceRepository.findById(request.getInvoiceId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Factura no encontrada: " + request.getInvoiceId()));
-        }
+        // 4. Validar unicidad de barcode y número de serie
+        validateBarcode(request.getBarcode());
+        validateSerialNumber(request.getSerialNumber());
 
-        // 3.6 Resolver marca activa por ID
-        Brand brand = null;
-        if (request.getBrandId() != null) {
-            brand = brandRepository.findById(request.getBrandId())
-                    .filter(Brand::getIsActive)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Marca no encontrada o inactiva: " + request.getBrandId()));
-        }
+        // 5. Resolver condición física (default GOOD si no se envía)
+        ConditionStatus condition = resolveConditionStatus(request.getConditionStatus());
 
-        // 4. Validar unicidad de barcode
-        if (request.getBarcode() != null && !request.getBarcode().isBlank()) {
-            if (assetRepository.existsByBarcodeAndBarcodeIsNotNull(request.getBarcode().trim())) {
-                throw new DuplicateResourceException(
-                        "Ya existe un bien con el código de barras: " + request.getBarcode());
-            }
-        }
-
-        // 5. Validar unicidad de número de serie
-        if (request.getSerialNumber() != null && !request.getSerialNumber().isBlank()) {
-            if (assetRepository.existsBySerialNumber(request.getSerialNumber().trim())) {
-                throw new DuplicateResourceException(
-                        "Ya existe un bien con el número de serie: " + request.getSerialNumber());
-            }
-        }
-
-        // 6. Resolver condición física (default GOOD si no se envía)
-        ConditionStatus condition = ConditionStatus.GOOD;
-        if (request.getConditionStatus() != null && !request.getConditionStatus().isBlank()) {
-            try {
-                condition = ConditionStatus.valueOf(request.getConditionStatus().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(
-                        "Condición inválida: " + request.getConditionStatus()
-                                + ". Valores aceptados: GOOD, REGULAR, BAD");
-            }
-        }
-
-        // 7. Construir la entidad Asset (inventoryNumber se asigna después del save)
+        // 6. Construir la entidad Asset (inventoryNumber se asigna después del save)
         Asset asset = new Asset();
         asset.setDescription(request.getDescription().trim());
-        //asset.setBrand(request.getBrand());
         asset.setBrand(brand);
         asset.setModel(request.getModel());
         asset.setSerialNumber(request.getSerialNumber() != null
@@ -129,11 +91,11 @@ public class AssetServiceImpl implements AssetService {
         asset.setNotes(request.getNotes());
         asset.setCategory(category);
         asset.setLocation(location);
-
         asset.setInvoice(invoice);
-        asset.setInvoiceDate(request.getInvoiceDate() != null
-                ? request.getInvoiceDate()
-                : (invoice != null ? invoice.getInvoiceDate() : null));
+
+        // Si viene la fecha en el request, se usa; si no, se intenta sacar de la factura; si no, queda null.
+        asset.setInvoiceDate(Optional.ofNullable(request.getInvoiceDate())
+                .orElse(invoice != null ? invoice.getInvoiceDate() : null));
 
         asset.setEntryDate(request.getEntryDate());
         asset.setConditionStatus(condition);
@@ -143,13 +105,13 @@ public class AssetServiceImpl implements AssetService {
                 && !request.getInventoryNumber().isBlank();
         asset.setInventoryNumber(hasCustomNumber ? request.getInventoryNumber().trim() : "PENDING");
 
-        // 8. Primer save — MariaDB asigna el id
+        // 7. Primer save — MariaDB asigna el id
         Asset saved = assetRepository.save(asset);
 
-        // 9. Flush para obtener el ID real sin cerrar la transacción
+        // 8. Flush para obtener el ID real sin cerrar la transacción
         entityManager.flush();
 
-        // 10. Generar número de inventario y actualizar solo ese campo
+        // 9. Generar número de inventario y actualizar solo ese campo
         if ("PENDING".equals(saved.getInventoryNumber())) {
             String inventoryNumber = inventoryNumberGenerator.generate(saved.getId());
             saved.setInventoryNumber(inventoryNumber);
@@ -163,15 +125,87 @@ public class AssetServiceImpl implements AssetService {
 
         log.info("Bien registrado: {} por usuario id={}", saved.getInventoryNumber(), userId);
 
-        // 11. Mapear a DTO de respuesta
+        // 10. Mapear a DTO de respuesta
         return toResponseDTO(saved);
     }
 
-    @Transactional(readOnly = true)
+
     @Override
-    public Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, Pageable pageable) {
-        return assetRepository.findByFilters(condition, lifecycle, pageable)
-                .map(assetMapper::toDto); // Mapeamos cada entidad del Page a DTO automáticamente
+    @Transactional(readOnly = true)
+    public Page<AssetResumeResponse> getAllAssets(
+            ConditionStatus condition,
+            LifecycleStatus lifecycle,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+
+        return assetRepository.findFiltered(condition, lifecycle, startDate, endDate, pageable)
+                .map(assetMapper::toDto);
+    }
+
+    // ---------------------------------------------------------------
+    // Métodos auxiliares de resolución — reducen la complejidad cognitiva
+    // de registerAsset al extraer cada bloque if a su propio método.
+    // ---------------------------------------------------------------
+
+    /** Resuelve la ubicación activa si se proporcionó un ID; de lo contrario retorna null. */
+    private Location resolveLocation(Integer locationId) {
+        if (locationId == null) return null;
+        return locationRepository.findByIdAndIsActiveTrue(locationId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ubicación no encontrada o inactiva: " + locationId));
+    }
+
+    /** Resuelve la factura si se proporcionó un ID; de lo contrario retorna null. */
+    private Invoice resolveInvoice(Long invoiceId) {
+        if (invoiceId == null) return null;
+        return invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Factura no encontrada: " + invoiceId));
+    }
+
+    /** Resuelve la marca activa si se proporcionó un ID; de lo contrario retorna null. */
+    private Brand resolveBrand(Integer brandId) {
+        if (brandId == null) return null;
+        return brandRepository.findById(brandId)
+                .filter(Brand::getIsActive)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Marca no encontrada o inactiva: " + brandId));
+    }
+
+    /** Valida que el código de barras no esté duplicado en el repositorio. */
+    private void validateBarcode(String barcode) {
+        if (barcode != null && !barcode.isBlank()
+                && assetRepository.existsByBarcodeAndBarcodeIsNotNull(barcode.trim())) {
+            throw new DuplicateResourceException(
+                    "Ya existe un bien con el código de barras: " + barcode);
+        }
+    }
+
+    /** Valida que el número de serie no esté duplicado en el repositorio. */
+    private void validateSerialNumber(String serialNumber) {
+        if (serialNumber != null && !serialNumber.isBlank()
+                && assetRepository.existsBySerialNumber(serialNumber.trim())) {
+            throw new DuplicateResourceException(
+                    "Ya existe un bien con el número de serie: " + serialNumber);
+        }
+    }
+
+    /**
+     * Convierte el string de condición del request a su enum correspondiente.
+     * Retorna {@link ConditionStatus#GOOD} si no se proporcionó valor.
+     */
+    private ConditionStatus resolveConditionStatus(String conditionStatus) {
+        if (conditionStatus == null || conditionStatus.isBlank()) {
+            return ConditionStatus.GOOD;
+        }
+        try {
+            return ConditionStatus.valueOf(conditionStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Condición inválida: " + conditionStatus
+                            + ". Valores aceptados: GOOD, REGULAR, BAD");
+        }
     }
 
     // ---------------------------------------------------------------
@@ -184,7 +218,6 @@ public class AssetServiceImpl implements AssetService {
         dto.setInventoryNumber(asset.getInventoryNumber());
         dto.setBarcode(asset.getBarcode());
         dto.setDescription(asset.getDescription());
-        //dto.setBrand(asset.getBrand());
         dto.setBrand(asset.getBrand() != null ? asset.getBrand().getName() : null);
         dto.setModel(asset.getModel());
         dto.setSerialNumber(asset.getSerialNumber());
@@ -196,10 +229,11 @@ public class AssetServiceImpl implements AssetService {
         dto.setConditionStatus(asset.getConditionStatus().name());
         dto.setLifecycleStatus(asset.getLifecycleStatus().name());
         dto.setCreatedAt(asset.getCreatedAt());
-        dto.setCreatedByName(asset.getCreatedBy().getFullName());
+        dto.setCreatedByName(asset.getCreatedBy().getGuardian().getFullName());
         dto.setImageUrls(null);
         return dto;
     }
+
     @Transactional
     @Override
     public UpdateConditionResponse updateCondition(Long assetId, UpdateConditionRequest request, Long updatedBy) {
@@ -234,7 +268,7 @@ public class AssetServiceImpl implements AssetService {
 
     /**
      * Valida que el bien se puede modificar dado su ciclo de vida actual.
-     * */
+     */
     private void validateAssetIsModifiable(Asset asset) {
         if (asset.getLifecycleStatus() == LifecycleStatus.DECOMMISSIONED) {
             throw new InvalidAssetStateException(
@@ -244,7 +278,6 @@ public class AssetServiceImpl implements AssetService {
         }
     }
 
-    // Agrega la implementación
     @Override
     @Transactional(readOnly = true)
     public Page<AssetSearchResponseDTO> searchAssets(String keyword, Pageable pageable) {

@@ -25,9 +25,6 @@ public class InvoiceRequestDTO {
     @Digits(integer = 10, fraction = 2, message = "Formato de monto inválido.")
     private BigDecimal totalAmount;
 
-    @Size(max = 500, message = "La ruta del documento no puede superar 500 caracteres.")
-    private String documentPath;
-
     @Size(max = 1000, message = "Las notas no pueden superar 1000 caracteres.")
     private String notes;
 

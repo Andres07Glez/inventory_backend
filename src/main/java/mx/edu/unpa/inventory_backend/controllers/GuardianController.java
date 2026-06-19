@@ -23,9 +23,6 @@ public class GuardianController {
 
     private final GuardianService guardianService;
 
-    /**
-     * Lista los resguardantes activos con paginación.
-     */
     @GetMapping
     public ResponseEntity<Page<GuardianResponseDTO>> findAllActive(Pageable pageable) {
         return ResponseEntity.ok(guardianService.findAllActive(pageable));
