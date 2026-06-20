@@ -59,7 +59,7 @@ public class DecommissionServiceImpl implements DecommissionService {
         // Edge case: no crear segunda baja para el mismo bien
         if (decommissionRepository.existsByAssetId(asset.getId())) {
             throw new InvalidDecommissionStateException(
-                    "El bien " + asset.getInventoryNumber() +
+                     asset.getInventoryNumber() +
                             " ya tiene un proceso de baja registrado.");
         }
 
@@ -139,7 +139,7 @@ public class DecommissionServiceImpl implements DecommissionService {
         return decommissionRepository.findByAssetId(assetId)
                 .map(this::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "El bien " + assetId + " no tiene un proceso de baja registrado."));
+                         assetId + " no tiene un proceso de baja registrado."));
     }
 
     // ── Mapeo ─────────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ public class DecommissionServiceImpl implements DecommissionService {
     private void validateAssetCanBeDecommissioned(Asset asset) {
         if (asset.getLifecycleStatus() == LifecycleStatus.DECOMMISSIONED) {
             throw new InvalidDecommissionStateException(
-                    "El bien " + asset.getInventoryNumber() + " ya está dado de baja.");
+                     asset.getInventoryNumber() + " ya está dado de baja.");
         }
     }
 
