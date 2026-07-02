@@ -105,7 +105,7 @@ class MaintenanceControllerTest {
     static class AuthenticatedUserResolver implements HandlerMethodArgumentResolver {
 
         static final AuthenticatedUser FAKE_USER = new AuthenticatedUser(
-                1L, "test_admin", "secret", UserRole.ADMIN, true
+                1L, "test_admin", "secret", UserRole.ADMIN, true,1L
         );
 
         @Override

@@ -7,10 +7,12 @@ import mx.edu.unpa.inventory_backend.dtos.guardian.response.GuardianSummary;
 import mx.edu.unpa.inventory_backend.enums.Campus;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.AssetMapper;
 import mx.edu.unpa.inventory_backend.repositories.AssetAssignmentRepository;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
+import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -201,28 +203,40 @@ class AssetQueryServiceImplTest {
     @DisplayName("findById")
     class FindById {
 
+        // ── Fixtures de AuthenticatedUser por rol ────────────────────────────
+        // Declarados aquí (no en @BeforeEach global) porque cada caso necesita
+        // un principal distinto: ADMIN libre, GUARDIAN propietario, GUARDIAN intruso.
+
+        private final AuthenticatedUser adminUser = new AuthenticatedUser(
+                1L, "admin", "hashed", UserRole.ADMIN, true, null);
+
+        private final AuthenticatedUser guardianOwner = new AuthenticatedUser(
+                10L, "guardian01", "hashed", UserRole.GUARDIAN, true, 10L); // guardianId=10L = guardian del fixture
+
+        private final AuthenticatedUser guardianIntruder = new AuthenticatedUser(
+                20L, "guardian02", "hashed", UserRole.GUARDIAN, true, 99L); // guardianId=99L ≠ guardian del fixture
+
+        // ── ADMIN / roles no-GUARDIAN ─────────────────────────────────────────
+
         @Test
-        @DisplayName("should_returnDetail_when_assetExistsWithActiveAssignment")
-        void should_returnDetail_when_assetExistsWithActiveAssignment() {
+        @DisplayName("should_returnDetail_when_adminRequestsAnyAsset")
+        void should_returnDetail_when_adminRequestsAnyAsset() {
             // Arrange
             GuardianSummary guardianSummary = new GuardianSummary(10L, "María López", "EMP-001", "TI");
             AssetDetailResponse expected = buildDetailResponse(1L, guardianSummary);
 
-            when(assetRepository.findByIdWithDetails(1L))
-                    .thenReturn(Optional.of(asset));
-            when(assignmentRepository.findActiveByAssetId(1L))
-                    .thenReturn(Optional.of(activeAssignment));
-            when(assetMapper.toDetailResponse(asset, activeAssignment))
-                    .thenReturn(expected);
+            when(assetRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(asset));
+            when(assignmentRepository.findActiveByAssetId(1L)).thenReturn(Optional.of(activeAssignment));
+            when(assetMapper.toDetailResponse(asset, activeAssignment)).thenReturn(expected);
 
-            // Act
-            AssetDetailResponse result = sut.findById(1L);
+            // Act — ADMIN no pasa por validateGuardianAccess, accede siempre
+            AssetDetailResponse result = sut.findById(1L, adminUser);
 
             // Assert
             assertNotNull(result);
             assertNotNull(result.guardian());
-            verify(assetRepository,       times(1)).findByIdWithDetails(1L);
-            verify(assignmentRepository,  times(1)).findActiveByAssetId(1L);
+            verify(assetRepository,      times(1)).findByIdWithDetails(1L);
+            verify(assignmentRepository, times(1)).findActiveByAssetId(1L);
         }
 
         @Test
@@ -231,15 +245,12 @@ class AssetQueryServiceImplTest {
             // Arrange
             AssetDetailResponse expected = buildDetailResponse(1L, null);
 
-            when(assetRepository.findByIdWithDetails(1L))
-                    .thenReturn(Optional.of(asset));
-            when(assignmentRepository.findActiveByAssetId(1L))
-                    .thenReturn(Optional.empty());
-            when(assetMapper.toDetailResponse(asset, null))
-                    .thenReturn(expected);
+            when(assetRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(asset));
+            when(assignmentRepository.findActiveByAssetId(1L)).thenReturn(Optional.empty());
+            when(assetMapper.toDetailResponse(asset, null)).thenReturn(expected);
 
-            // Act
-            AssetDetailResponse result = sut.findById(1L);
+            // Act — ADMIN sin asignación activa: no toca validateGuardianAccess
+            AssetDetailResponse result = sut.findById(1L, adminUser);
 
             // Assert
             assertNull(result.guardian());
@@ -250,15 +261,74 @@ class AssetQueryServiceImplTest {
         @DisplayName("should_throwResourceNotFoundException_when_assetDoesNotExist")
         void should_throwResourceNotFoundException_when_assetDoesNotExist() {
             // Arrange
-            when(assetRepository.findByIdWithDetails(99L))
-                    .thenReturn(Optional.empty());
+            when(assetRepository.findByIdWithDetails(99L)).thenReturn(Optional.empty());
 
-            // Act & Assert
+            // Act & Assert — falla antes de llegar a validateGuardianAccess
             assertThrows(ResourceNotFoundException.class,
-                    () -> sut.findById(99L));
+                    () -> sut.findById(99L, adminUser));
 
             verify(assignmentRepository, never()).findActiveByAssetId(anyLong());
             verify(assetMapper,          never()).toDetailResponse(any(), any());
+        }
+
+        // ── GUARDIAN: acceso a bien propio ────────────────────────────────────
+
+        @Test
+        @DisplayName("should_returnDetail_when_guardianRequestsOwnAssignedAsset")
+        void should_returnDetail_when_guardianRequestsOwnAssignedAsset() {
+            // Arrange
+            // guardian del fixture tiene id=10L, guardianOwner tiene guardianId=10L → match
+            GuardianSummary guardianSummary = new GuardianSummary(10L, "María López", "EMP-001", "TI");
+            AssetDetailResponse expected = buildDetailResponse(1L, guardianSummary);
+
+            when(assetRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(asset));
+            when(assignmentRepository.findActiveByAssetId(1L)).thenReturn(Optional.of(activeAssignment));
+            when(assetMapper.toDetailResponse(asset, activeAssignment)).thenReturn(expected);
+
+            // Act
+            AssetDetailResponse result = sut.findById(1L, guardianOwner);
+
+            // Assert — acceso concedido, detalle retornado con guardian
+            assertNotNull(result);
+            assertEquals(10L, result.guardian().id());
+            verify(assetMapper, times(1)).toDetailResponse(asset, activeAssignment);
+        }
+
+        // ── GUARDIAN: acceso a bien ajeno ─────────────────────────────────────
+
+        @Test
+        @DisplayName("should_throw404_when_guardianRequestsAssetNotAssignedToThem")
+        void should_throw404_when_guardianRequestsAssetNotAssignedToThem() {
+            // Arrange
+            // guardian del fixture tiene id=10L, guardianIntruder tiene guardianId=99L → no match
+            when(assetRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(asset));
+            when(assignmentRepository.findActiveByAssetId(1L)).thenReturn(Optional.of(activeAssignment));
+
+            // Act & Assert — 404 deliberado, no 403, para no confirmar existencia del recurso
+            ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                    () -> sut.findById(1L, guardianIntruder));
+
+            assertTrue(ex.getMessage().contains("1"),
+                    "El mensaje debe referenciar el ID solicitado");
+
+            // El mapper NO debe invocarse — la validación cortocircuita antes
+            verify(assetMapper, never()).toDetailResponse(any(), any());
+        }
+
+        @Test
+        @DisplayName("should_throw404_when_guardianRequestsUnassignedAsset")
+        void should_throw404_when_guardianRequestsUnassignedAsset() {
+            // Arrange — el bien existe pero no tiene asignación activa (returned_at IS NOT NULL para todas)
+            // Edge case: GUARDIAN no puede ver un bien que nadie tiene asignado,
+            // porque no hay forma de que "sea suyo"
+            when(assetRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(asset));
+            when(assignmentRepository.findActiveByAssetId(1L)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(ResourceNotFoundException.class,
+                    () -> sut.findById(1L, guardianIntruder));
+
+            verify(assetMapper, never()).toDetailResponse(any(), any());
         }
     }
 

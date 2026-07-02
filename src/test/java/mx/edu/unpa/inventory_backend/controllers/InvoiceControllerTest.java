@@ -96,7 +96,7 @@ class InvoiceControllerTest {
     static class AuthenticatedUserResolver implements HandlerMethodArgumentResolver {
 
         private static final AuthenticatedUser FAKE_USER = new AuthenticatedUser(
-                1L, "test_user", "secret", UserRole.ADMIN, true
+                1L, "test_user", "secret", UserRole.ADMIN, true,1L
         );
 
         @Override

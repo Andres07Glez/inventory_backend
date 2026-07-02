@@ -72,7 +72,7 @@ class AssetImageControllerTest {
     @BeforeEach
     void setUp() {
         AuthenticatedUser principal = new AuthenticatedUser(
-                1L, "admin", "hashed", UserRole.ADMIN, true
+                1L, "admin", "hashed", UserRole.ADMIN, true,1L
         );
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());

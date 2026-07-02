@@ -78,7 +78,7 @@ class UserManagementControllerTest {
                                               ModelAndViewContainer mavContainer,
                                               NativeWebRequest webRequest,
                                               WebDataBinderFactory binderFactory) {
-                    return new AuthenticatedUser(1L, "admin", "secret", UserRole.ADMIN, true);
+                    return new AuthenticatedUser(1L, "admin", "secret", UserRole.ADMIN, true,1L);
                 }
             });
         }

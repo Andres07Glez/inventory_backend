@@ -87,7 +87,7 @@ class IncidentControllerTest {
                         org.springframework.web.context.request.NativeWebRequest webRequest,
                         org.springframework.web.bind.support.WebDataBinderFactory binderFactory) {
                     return new AuthenticatedUser(
-                            1L, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true);
+                            1L, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true,1L);
                 }
             });
         }

@@ -72,7 +72,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         AuthenticatedUser principal = new AuthenticatedUser(
-                1L, "juan.perez", "hashed", UserRole.OPERADOR, true
+                1L, "juan.perez", "hashed", UserRole.OPERADOR, true,1L
         );
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
@@ -92,7 +92,8 @@ class AuthControllerTest {
                 "juan.perez",
                 "Juan Pérez",
                 UserRole.OPERADOR,
-                false
+                false,
+                1L
         );
     }
 
@@ -131,7 +132,7 @@ class AuthControllerTest {
         void should_return200WithMustChangePasswordTrue_when_passwordIsGeneric() throws Exception {
             AuthResponse responseWithFlag = AuthResponse.of(
                     "eyJhbGciOiJIUzI1NiJ9.token", 1L,
-                    "juan.perez", "Juan Pérez", UserRole.OPERADOR, true
+                    "juan.perez", "Juan Pérez", UserRole.OPERADOR, true,1L
             );
             LoginRequest request = new LoginRequest("EMP-001", "EMP-001");
             when(authService.login(any(LoginRequest.class))).thenReturn(responseWithFlag);

@@ -27,7 +27,7 @@ class UserRepositoryTest extends BaseRepositoryTest {
      *
      * NOTA: NO se redefine buildUser(String) aquí a propósito.
      * BaseRepositoryTest ya declara buildUser(String) como protected y su
-     * @BeforeEach lo llama con "operador01". Redefinir ese método en la
+     * @BeforeEach lo llama con "operador01". Redefinir ese metodo en la
      * subclase causaría que el @BeforeEach de la base llame a ESTA versión,
      * lo que generaría un ConstraintViolationException por username duplicado
      * cada vez que un test del repositorio también use "operador01".

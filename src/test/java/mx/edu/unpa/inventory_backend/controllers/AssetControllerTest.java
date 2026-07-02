@@ -92,7 +92,7 @@ class AssetControllerTest {
     @BeforeEach
     void setUp() {
         // Principal — mismo patrón resuelto en AssetAssignmentControllerTest
-        AuthenticatedUser principal = new AuthenticatedUser(1L, "admin", "hashed", UserRole.ADMIN, true);
+        AuthenticatedUser principal = new AuthenticatedUser(1L, "admin", "hashed", UserRole.ADMIN, true,1L);
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
@@ -369,11 +369,14 @@ class AssetControllerTest {
     class FindById {
 
         @Test
-        @DisplayName("should_return200WithDetail_when_assetExists")
-        void should_return200WithDetail_when_assetExists() throws Exception {
-            when(assetQueryService.findById(1L)).thenReturn(assetDetail);
+        @DisplayName("should_return200WithDetail_when_adminRequestsAnyAsset")
+        void should_return200WithDetail_when_adminRequestsAnyAsset() throws Exception {
+            // El principal del setUp() ya es ADMIN — lo reutilizamos directamente
+            when(assetQueryService.findById(eq(1L), any(AuthenticatedUser.class)))
+                    .thenReturn(assetDetail);
 
-            mockMvc.perform(get(BASE_URL + "/1"))
+            mockMvc.perform(get(BASE_URL + "/1")
+                            .with(principalPostProcessor))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1L))
@@ -385,10 +388,11 @@ class AssetControllerTest {
         @Test
         @DisplayName("should_return404_when_assetDoesNotExist")
         void should_return404_when_assetDoesNotExist() throws Exception {
-            when(assetQueryService.findById(99L))
+            when(assetQueryService.findById(eq(99L), any(AuthenticatedUser.class)))
                     .thenThrow(new ResourceNotFoundException("Bien no encontrado con id: 99"));
 
-            mockMvc.perform(get(BASE_URL + "/99"))
+            mockMvc.perform(get(BASE_URL + "/99")
+                            .with(principalPostProcessor))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value("Bien no encontrado con id: 99"));
@@ -397,12 +401,70 @@ class AssetControllerTest {
         @Test
         @DisplayName("should_return400_when_idIsNegative")
         void should_return400_when_idIsNegative() throws Exception {
-            // Edge case: @Positive rechaza IDs negativos o cero antes de llegar al servicio
-            mockMvc.perform(get(BASE_URL + "/-1"))
+            mockMvc.perform(get(BASE_URL + "/-1")
+                            .with(principalPostProcessor))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false));
 
             verifyNoInteractions(assetQueryService);
+        }
+
+        // ── Casos nuevos: acceso de GUARDIAN ─────────────────────────────────
+
+        @Test
+        @DisplayName("should_return200_when_guardianRequestsOwnAsset")
+        void should_return200_when_guardianRequestsOwnAsset() throws Exception {
+            // GUARDIAN con guardianId=2L solicita el bien 1L
+            // que en assetDetail tiene GuardianSummary(id=2L) — es suyo
+            AuthenticatedUser guardian = new AuthenticatedUser(
+                    10L, "guardian01", "hashed", UserRole.GUARDIAN, true, 2L);
+
+            UsernamePasswordAuthenticationToken guardianAuth =
+                    new UsernamePasswordAuthenticationToken(guardian, null, guardian.getAuthorities());
+
+            RequestPostProcessor guardianProcessor = request -> {
+                SecurityContext ctx = new SecurityContextImpl(guardianAuth);
+                SecurityContextHolder.setContext(ctx);
+                request.getSession(true).setAttribute(
+                        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, ctx);
+                return request;
+            };
+
+            when(assetQueryService.findById(eq(1L), any(AuthenticatedUser.class)))
+                    .thenReturn(assetDetail);
+
+            mockMvc.perform(get(BASE_URL + "/1")
+                            .with(guardianProcessor))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.guardian.fullName").value("Juan Pérez"));
+        }
+
+        @Test
+        @DisplayName("should_return404_when_guardianRequestsAssetNotAssignedToThem")
+        void should_return404_when_guardianRequestsAssetNotAssignedToThem() throws Exception {
+            // GUARDIAN con guardianId=99L — el bien 1L pertenece a guardianId=2L
+            AuthenticatedUser intruder = new AuthenticatedUser(
+                    20L, "guardian02", "hashed", UserRole.GUARDIAN, true, 99L);
+
+            UsernamePasswordAuthenticationToken intruderAuth =
+                    new UsernamePasswordAuthenticationToken(intruder, null, intruder.getAuthorities());
+
+            RequestPostProcessor intruderProcessor = request -> {
+                SecurityContext ctx = new SecurityContextImpl(intruderAuth);
+                SecurityContextHolder.setContext(ctx);
+                request.getSession(true).setAttribute(
+                        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, ctx);
+                return request;
+            };
+
+            // El servicio lanza 404 — la validación vive ahí, no en el controller
+            when(assetQueryService.findById(eq(1L), any(AuthenticatedUser.class)))
+                    .thenThrow(new ResourceNotFoundException("No se encontró el bien con ID: 1"));
+
+            mockMvc.perform(get(BASE_URL + "/1")
+                            .with(intruderProcessor))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false));
         }
     }
 

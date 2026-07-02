@@ -298,7 +298,7 @@ class DecommissionControllerTest {
     class Create {
 
         private UsernamePasswordAuthenticationToken buildAuthentication(Long userId) {
-            var principal = new AuthenticatedUser(userId, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true);
+            var principal = new AuthenticatedUser(userId, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true,1L);
             return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         }
 
@@ -453,7 +453,7 @@ class DecommissionControllerTest {
     class Confirm {
 
         private UsernamePasswordAuthenticationToken buildAuthentication() {
-            var principal = new AuthenticatedUser(1L, "admin@unpa.mx", "pwd_hash", UserRole.ADMIN, true);
+            var principal = new AuthenticatedUser(1L, "admin@unpa.mx", "pwd_hash", UserRole.ADMIN, true,1L);
             return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         }
 
@@ -542,7 +542,8 @@ class DecommissionControllerTest {
                             "user@unpa.mx",
                             "pwd_hash",
                             UserRole.OPERADOR,
-                            true
+                            true,
+                            1L
                     );
                 }
             });

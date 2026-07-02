@@ -380,7 +380,7 @@ class GuardianControllerTest {
                         NativeWebRequest webRequest,
                         WebDataBinderFactory binderFactory
                 ) {
-                    return new AuthenticatedUser(1L, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true);
+                    return new AuthenticatedUser(1L, "user@unpa.mx", "pwd_hash", UserRole.OPERADOR, true,1L);
                 }
             });
         }
