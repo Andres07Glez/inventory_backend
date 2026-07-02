@@ -284,4 +284,12 @@ public class AssetServiceImpl implements AssetService {
         return assetRepository.searchAssetsWithCurrentGuardian(keyword, pageable);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+
+    public Page<AssetResumeResponse> getMyAssignedAssets(Long guardianId, Pageable pageable) {
+        return assetRepository.findAssignedToGuardian(guardianId, pageable)
+                .map(assetMapper::toDto);
+    }
+
 }

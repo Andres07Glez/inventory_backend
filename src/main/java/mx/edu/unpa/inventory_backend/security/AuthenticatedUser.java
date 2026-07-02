@@ -13,7 +13,8 @@ public record AuthenticatedUser(
         String username,
         String password,
         UserRole role,
-        boolean active
+        boolean active,
+        Long guardianId
 ) implements UserDetails {
 
     @Override
@@ -29,4 +30,7 @@ public record AuthenticatedUser(
     @Override public boolean isAccountNonExpired()     { return true; }
     @Override public boolean isAccountNonLocked()      { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
+    public boolean hasGuardian() {
+        return guardianId != null;
+    }
 }

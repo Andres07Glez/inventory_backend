@@ -6,10 +6,12 @@ import mx.edu.unpa.inventory_backend.domains.Asset;
 import mx.edu.unpa.inventory_backend.domains.AssetAssignment;
 import mx.edu.unpa.inventory_backend.dtos.asset.response.AssetDetailResponse;
 import mx.edu.unpa.inventory_backend.dtos.asset_assignment.response.AssignmentHistoryResponse;
+import mx.edu.unpa.inventory_backend.enums.UserRole;
 import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.mappers.AssetMapper;
 import mx.edu.unpa.inventory_backend.repositories.AssetAssignmentRepository;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
+import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +53,7 @@ public class AssetQueryServiceImpl implements AssetQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public AssetDetailResponse findById(Long id) {
+    public AssetDetailResponse findById(Long id, AuthenticatedUser requestingUser) {
         log.debug("Buscando bien por ID: {}", id);
 
         Asset asset = assetRepository.findByIdWithDetails(id)
@@ -59,6 +61,7 @@ public class AssetQueryServiceImpl implements AssetQueryService {
                         "No se encontró el bien con ID: " + id));
 
         Optional<AssetAssignment> active = assignmentRepository.findActiveByAssetId(id);
+        validateGuardianAccess(active, requestingUser, id);
         return assetMapper.toDetailResponse(asset, active.orElse(null));
     }
 
@@ -76,5 +79,25 @@ public class AssetQueryServiceImpl implements AssetQueryService {
                 assignmentRepository.findAllByAssetIdOrderByActivity(assetId);
 
         return assetMapper.toAssignmentHistoryResponseList(assignments);
+    }
+    private void validateGuardianAccess(
+            Optional<AssetAssignment> activeAssignment,
+            AuthenticatedUser requestingUser,
+            Long assetId
+    ) {
+        if (requestingUser.role() != UserRole.GUARDIAN) {
+            return;
+        }
+
+        boolean isAssignedToRequester = activeAssignment
+                .map(AssetAssignment::getGuardian)
+                .map(guardian -> guardian.getId().equals(requestingUser.guardianId()))
+                .orElse(false);
+
+        if (!isAssignedToRequester) {
+            log.warn("Acceso denegado: guardianId={} intentó ver bien ID={} sin asignación activa",
+                    requestingUser.guardianId(), assetId);
+            throw new ResourceNotFoundException("No se encontró el bien con ID: " + assetId);
+        }
     }
 }

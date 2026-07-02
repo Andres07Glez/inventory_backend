@@ -1,5 +1,6 @@
 package mx.edu.unpa.inventory_backend.services;
 
+import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.response.UserDetailResponse;
@@ -15,6 +16,7 @@ public interface UserManagementService {
     UserDetailResponse updateRole(Long targetUserId, UpdateUserRoleRequest request, Long currentUserId);
     UserDetailResponse toggleStatus(Long targetUserId, Long currentUserId);
     UserDetailResponse resetPassword(Long targetUserId);
+    User findByUsername(String username);
 
 
 }

@@ -2,6 +2,7 @@ package mx.edu.unpa.inventory_backend.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mx.edu.unpa.inventory_backend.domains.User;
 import mx.edu.unpa.inventory_backend.dtos.android.response.ApiResponse;
 import mx.edu.unpa.inventory_backend.dtos.user.request.CreateUserRequest;
 import mx.edu.unpa.inventory_backend.dtos.user.request.UpdateUserRoleRequest;
@@ -41,6 +42,10 @@ public class UserManagementController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDetailResponse>> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(userManagementService.findById(id)));
+    }
+    @GetMapping("/user/{username}")
+    public ResponseEntity<ApiResponse<User>> findByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(ApiResponse.ok(userManagementService.findByUsername(username)));
     }
 
     @PostMapping

@@ -15,6 +15,7 @@ import mx.edu.unpa.inventory_backend.dtos.asset.response.UpdateConditionResponse
 import mx.edu.unpa.inventory_backend.dtos.asset_assignment.response.AssignmentHistoryResponse;
 import mx.edu.unpa.inventory_backend.enums.ConditionStatus;
 import mx.edu.unpa.inventory_backend.enums.LifecycleStatus;
+import mx.edu.unpa.inventory_backend.exceptions.ResourceNotFoundException;
 import mx.edu.unpa.inventory_backend.repositories.AssetRepository;
 import mx.edu.unpa.inventory_backend.security.AuthenticatedUser;
 import mx.edu.unpa.inventory_backend.services.AssetQueryService;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -148,8 +150,9 @@ public class AssetController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AssetDetailResponse>> findById(
-            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id) {
-        return ResponseEntity.ok(ApiResponse.ok(assetQueryService.findById(id)));
+            @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,
+            @AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(ApiResponse.ok(assetQueryService.findById(id,currentUser)));
     }
     @GetMapping("/{id}/assignments")
     public ResponseEntity<ApiResponse<List<AssignmentHistoryResponse>>> getAssignmentHistory(
@@ -162,5 +165,21 @@ public class AssetController {
             @PathVariable @Positive(message = "El ID debe ser un número positivo") Long id,
             @RequestBody @Valid UpdateConditionRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(assetService.updateCondition(id, request,1L)));// 1L sustituir por usuarioId
+    }
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")   // ← si solo guardian entonces hasRole('GUARDIAN')
+    public ResponseEntity<ApiResponse<Page<AssetResumeResponse>>> getMyAssignedAssets(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            Pageable pageable
+    ) {
+        if (!currentUser.hasGuardian()) {
+            throw new ResourceNotFoundException(
+                    "El usuario autenticado no tiene un resguardante vinculado.");
+        }
+
+        Page<AssetResumeResponse> result = assetService.getMyAssignedAssets(
+                currentUser.guardianId(), pageable);
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

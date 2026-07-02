@@ -187,5 +187,16 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
     List<AssetSearchResultDTO> searchActive(
             @Param("q") String q,
             @Param("limit") int limit);
+    @EntityGraph(attributePaths = {"category", "location"})
+    @Query("""
+        SELECT a FROM Asset a
+        WHERE EXISTS (
+            SELECT 1 FROM AssetAssignment aa
+            WHERE aa.asset = a
+              AND aa.guardian.id = :guardianId
+              AND aa.returnedAt IS NULL
+        )
+        """)
+    Page<Asset> findAssignedToGuardian(@Param("guardianId") Long guardianId, Pageable pageable);
 
 }

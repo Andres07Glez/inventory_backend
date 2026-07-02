@@ -100,6 +100,11 @@ public class UserManagementServiceImpl implements UserManagementService {
         return userMapper.toDetail(userRepository.save(user));
     }
 
+    @Override
+    public User findByUsername(String username) {
+        return findOrThrow(username);
+    }
+
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -108,6 +113,10 @@ public class UserManagementServiceImpl implements UserManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
+    private User findOrThrow(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con name: " + username));
+    }
     private void guardSelfModification(Long targetId, Long currentId, String message) {
         if (targetId.equals(currentId)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, message);

@@ -47,11 +47,11 @@ public class AuthServiceImpl implements AuthService {
         // Construir el principal con los datos completos
         AuthenticatedUser principal = new AuthenticatedUser(
                 user.getId(), user.getUsername(), user.getPasswordHash(),
-                user.getRole(), user.getIsActive());
+                user.getRole(), user.getIsActive(),user.getGuardian().getId());
 
         String token = jwtService.generateToken(principal);
         return AuthResponse.of(token, principal.id(), principal.getUsername(),
-                user.getGuardian().getFullName(), principal.role(), mustChangePassword);
+                user.getGuardian().getFullName(), principal.role(), mustChangePassword, principal.guardianId());
     }
 
     @Override

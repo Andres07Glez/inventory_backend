@@ -15,14 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 public interface AssetService {
-    /**
-     * Registra un nuevo bien en el inventario.
-     * Genera automáticamente el número de inventario institucional.
-     *
-     * @param request  datos del bien enviados por el cliente
-     * @param userId   ID del usuario autenticado (extraído del token JWT)
-     * @return         DTO con los datos del bien recién registrado
-     */
+
     AssetResponseDTO registerAsset(AssetRequestDTO request, Long userId);
 
     Page<AssetResumeResponse> getAllAssets(ConditionStatus condition, LifecycleStatus lifecycle, LocalDate startDate,
@@ -31,6 +24,7 @@ public interface AssetService {
     @Transactional
     UpdateConditionResponse updateCondition(Long assetId, UpdateConditionRequest request, Long updatedBy);
 
-    // Agrega la firma del método
     Page<AssetSearchResponseDTO> searchAssets(String keyword, Pageable pageable);
+    Page<AssetResumeResponse> getMyAssignedAssets(Long guardianId, Pageable pageable);
+
 }
